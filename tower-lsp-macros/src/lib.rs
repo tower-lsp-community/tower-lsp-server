@@ -169,15 +169,16 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
             {
                 #route_registrations
 
-                let p = pending.clone();
+                let pending_cancel = pending.clone();
                 router.method(
                     "$/cancelRequest",
-                    move |_: &S, params| cancel_request(params, &p),
+                    move |_: &S, params| cancel_request(params, &pending_cancel),
                     tower::layer::util::Identity::new(),
                 );
+
                 router.method(
                     "exit",
-                    |_: &S| std::future::ready(()),
+                    |_: &S| async { if true { unreachable!("this is never called by the Exit layer"); } },
                     layers::Exit::new(state.clone(), pending, client.clone()),
                 );
 
