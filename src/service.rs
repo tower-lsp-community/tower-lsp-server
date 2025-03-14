@@ -176,7 +176,6 @@ impl<S: LanguageServer> LspServiceBuilder<S> {
     /// struct Mock;
     ///
     /// // Implementation of `LanguageServer` omitted...
-    /// # #[tower_lsp_server::async_trait]
     /// # impl LanguageServer for Mock {
     /// #     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
     /// #         Ok(InitializeResult::default())
@@ -248,7 +247,6 @@ impl<S: Debug> Debug for LspServiceBuilder<S> {
 
 #[cfg(test)]
 mod tests {
-    use async_trait::async_trait;
     use lsp_types::*;
     use serde_json::json;
     use tower::ServiceExt;
@@ -259,7 +257,6 @@ mod tests {
     #[derive(Debug)]
     struct Mock;
 
-    #[async_trait]
     impl LanguageServer for Mock {
         async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
             Ok(InitializeResult::default())

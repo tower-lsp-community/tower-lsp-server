@@ -5,8 +5,9 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, FnArg, ItemTrait, LitStr, ReturnType, TraitItem};
+use proc_macro2::Span;
+use quote::{quote, quote_spanned};
+use syn::{parse_macro_input, spanned::Spanned, ItemTrait, LitStr, ReturnType, TraitItem, Type};
 
 /// Macro for generating LSP server implementation from [`lsp-types`](https://docs.rs/lsp-types).
 ///
@@ -20,9 +21,10 @@ pub fn rpc(attr: TokenStream, item: TokenStream) -> TokenStream {
         return item;
     }
 
-    let lang_server_trait = parse_macro_input!(item as ItemTrait);
+    let mut lang_server_trait = parse_macro_input!(item as ItemTrait);
     let method_calls = parse_method_calls(&lang_server_trait);
     let req_types_and_router_fn = gen_server_router(&lang_server_trait.ident, &method_calls);
+    require_methods_return_send_future(&mut lang_server_trait.items);
 
     let tokens = quote! {
         #lang_server_trait
@@ -35,8 +37,6 @@ pub fn rpc(attr: TokenStream, item: TokenStream) -> TokenStream {
 struct MethodCall<'a> {
     rpc_name: String,
     handler_name: &'a syn::Ident,
-    params: Option<&'a syn::Type>,
-    result: Option<&'a syn::Type>,
 }
 
 fn parse_method_calls(lang_server_trait: &ItemTrait) -> Vec<MethodCall> {
@@ -66,21 +66,9 @@ fn parse_method_calls(lang_server_trait: &ItemTrait) -> Vec<MethodCall> {
         })
         .unwrap();
 
-        let params = method.sig.inputs.iter().nth(1).and_then(|arg| match arg {
-            FnArg::Typed(pat) => Some(&*pat.ty),
-            _ => None,
-        });
-
-        let result = match &method.sig.output {
-            ReturnType::Default => None,
-            ReturnType::Type(_, ty) => Some(&**ty),
-        };
-
         calls.push(MethodCall {
             rpc_name,
             handler_name: &method.sig.ident,
-            params,
-            result,
         });
     }
 
@@ -99,43 +87,8 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
                 "shutdown" => quote! { layers::Shutdown::new(state.clone(), pending.clone()) },
                 _ => quote! { layers::Normal::new(state.clone(), pending.clone()) },
             };
-
-            // NOTE: In a perfect world, we could simply loop over each `MethodCall` and emit
-            // `router.method(#rpc_name, S::#handler);` for each. While such an approach
-            // works for inherent async functions and methods, it breaks with `async-trait` methods
-            // due to this unfortunate `rustc` bug:
-            //
-            // https://github.com/rust-lang/rust/issues/64552
-            //
-            // As a workaround, we wrap each `async-trait` method in a regular `async fn` before
-            // passing it to `.method`, as documented in this GitHub issue:
-            //
-            // https://github.com/dtolnay/async-trait/issues/167
-            match (method.params, method.result) {
-                (Some(params), Some(result)) => quote! {
-                    async fn #handler<S: #trait_name>(server: &S, params: #params) -> #result {
-                        server.#handler(params).await
-                    }
-                    router.method(#rpc_name, #handler, #layer);
-                },
-                (None, Some(result)) => quote! {
-                    async fn #handler<S: #trait_name>(server: &S) -> #result {
-                        server.#handler().await
-                    }
-                    router.method(#rpc_name, #handler, #layer);
-                },
-                (Some(params), None) => quote! {
-                    async fn #handler<S: #trait_name>(server: &S, params: #params) {
-                        server.#handler(params).await
-                    }
-                    router.method(#rpc_name, #handler, #layer);
-                },
-                (None, None) => quote! {
-                    async fn #handler<S: #trait_name>(server: &S) {
-                        server.#handler().await
-                    }
-                    router.method(#rpc_name, #handler, #layer);
-                },
+            quote! {
+                router.method(#rpc_name, S::#handler, #layer);
             }
         })
         .collect();
@@ -184,5 +137,39 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
                 router
             }
         }
+    }
+}
+
+/// Transforms all `async fn()` to `fn()` returning `impl Future + Send`
+fn require_methods_return_send_future(items: &mut Vec<TraitItem>) {
+    let empty_type: Box<Type> = syn::parse2(quote!(())).unwrap();
+
+    for method in items {
+        let TraitItem::Fn(func) = method else {
+            continue;
+        };
+
+        let (arrow, rtype) = match func.sig.output.clone() {
+            ReturnType::Default => (syn::Token![->](Span::call_site()), empty_type.clone()),
+            ReturnType::Type(arrow, rtype) => (arrow, rtype),
+        };
+
+        if let Some(blk) = func.default.take() {
+            let span = blk.span();
+            let stmts = blk.stmts;
+            func.default =
+                Some(syn::parse2(quote_spanned!(span => { async { #(#stmts)* }})).unwrap());
+        }
+
+        let span = rtype.span();
+
+        func.sig.asyncness = None;
+        func.sig.output = ReturnType::Type(
+            arrow,
+            syn::parse2(
+                quote_spanned!(span => impl ::core::future::Future<Output = #rtype> + Send),
+            )
+            .unwrap(),
+        );
     }
 }

@@ -11,7 +11,6 @@ struct Backend {
     client: Client,
 }
 
-#[tower_lsp_server::async_trait]
 impl LanguageServer for Backend {
     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
         Ok(InitializeResult {

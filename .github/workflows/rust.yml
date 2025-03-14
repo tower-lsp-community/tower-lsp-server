@@ -8,15 +8,18 @@ on:
     branches:
     - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   cargo-test:
     name: cargo test ${{ matrix.os }}-${{ matrix.rust-version }}-${{ matrix.runtime }})
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust-version: [1.82.0, 1.70.0, nightly]
+        rust-version: [1.82.0, 1.77.0, nightly]
         runtime: [runtime-tokio, runtime-agnostic]
 
     steps:
