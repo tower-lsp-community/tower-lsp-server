@@ -85,6 +85,7 @@ pub use self::service::progress::{
 };
 pub use self::service::{Client, ClientSocket, ExitedError, LspService, LspServiceBuilder};
 pub use self::transport::{Loopback, Server};
+pub use self::uri_ext::{uri_from_file_path, UriExt};
 
 pub mod jsonrpc;
 
@@ -92,3 +93,4 @@ mod codec;
 mod server;
 mod service;
 mod transport;
+mod uri_ext;
