@@ -41,14 +41,32 @@ fn strict_canonicalize<P: AsRef<Path>>(path: P) -> std::io::Result<PathBuf> {
     impl_(canon)
 }
 
-/// Provide more methods to [`fluent_uri::Uri`]. Especially to convert to and
-/// from file paths.
-pub trait UriExt {
-    /// Convert the path component of a [`fluent_uri::Uri`] to a file path.
+/// Provide methods to [`lsp_types::Uri`] to fill blanks left by
+/// `fluent_uri` (the underlying type) especially when converting to and from file paths.
+pub trait UriExt: Sized {
+    /// Convert the path component of a [`lsp_types::Uri`] to a file path.
     fn to_file_path(&self) -> Option<Cow<Path>>;
+
+    /// Convert a file path to a [`lsp_types::Uri`].
+    fn from_file_path<A: AsRef<Path>>(path: A) -> Option<Self>;
 }
 
 impl UriExt for lsp_types::Uri {
+    /// Assuming the URL is in the `file` scheme or similar,
+    /// convert its path to an absolute `std::path::Path`.
+    ///
+    /// **Note:** This does not actually check the URL’s `scheme`, and may
+    /// give nonsensical results for other schemes. It is the user’s
+    /// responsibility to check the URL’s scheme before calling this.
+    ///
+    /// ```
+    /// # use lsp_types::Uri;
+    /// # use std::{str::FromStr, path::PathBuf};
+    /// # use tower_lsp_server::UriExt;
+    /// let uri = Uri::from_str("file:///etc/passwd").unwrap();
+    /// let path = uri.to_file_path().unwrap();
+    /// assert_eq!(path, PathBuf::from("/etc/passwd"));
+    /// ```
     fn to_file_path(&self) -> Option<Cow<Path>> {
         let path = match self.path().as_estr().decode().into_string_lossy() {
             Cow::Borrowed(ref_) => Cow::Borrowed(Path::new(ref_)),
@@ -77,22 +95,28 @@ impl UriExt for lsp_types::Uri {
             Some(path)
         }
     }
-}
 
-/// Create a [`fluent_uri::Uri`] from a file path.
-pub fn uri_from_file_path(path: &Path) -> Option<Uri> {
-    let fragment = if !path.is_absolute() {
-        Cow::from(strict_canonicalize(path).ok()?)
-    } else {
-        Cow::from(path)
-    };
+    /// Create a [`fluent_uri::Uri`] from a file path.
+    fn from_file_path<A: AsRef<Path>>(path: A) -> Option<Self> {
+        let path = path.as_ref();
 
-    if cfg!(windows) {
-        // we want to parse a triple-slash path for Windows paths
-        // it's a shorthand for `file://localhost/C:/Windows` with the `localhost` omitted
-        let raw = format!("file:///{}", fragment.to_string_lossy().replace("\\", "/"));
-        Uri::from_str(&raw).ok()
-    } else {
-        Uri::from_str(&format!("file://{}", fragment.to_string_lossy())).ok()
+        let fragment = if path.is_absolute() {
+            Cow::Borrowed(path)
+        } else {
+            match strict_canonicalize(path) {
+                Ok(path) => Cow::Owned(path),
+                Err(_) => return None,
+            }
+        };
+
+        let raw_uri = if cfg!(windows) {
+            // we want to parse a triple-slash path for Windows paths
+            // it's a shorthand for `file://localhost/C:/Windows` with the `localhost` omitted
+            format!("file:///{}", fragment.to_string_lossy().replace("\\", "/"))
+        } else {
+            format!("file://{}", fragment.to_string_lossy())
+        };
+
+        Uri::from_str(&raw_uri).ok()
     }
 }
