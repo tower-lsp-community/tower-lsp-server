@@ -96,7 +96,7 @@ impl UriExt for lsp_types::Uri {
         }
     }
 
-    /// Create a [`fluent_uri::Uri`] from a file path.
+    /// Create a [`lsp_types::Uri`] from a file path.
     fn from_file_path<A: AsRef<Path>>(path: A) -> Option<Self> {
         let path = path.as_ref();
 
@@ -118,5 +118,49 @@ impl UriExt for lsp_types::Uri {
         };
 
         Uri::from_str(&raw_uri).ok()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::strict_canonicalize;
+    use crate::UriExt;
+    use lsp_types::Uri;
+    use std::path::Path;
+
+    #[test]
+    #[cfg(windows)]
+    fn test_idempotent_canonicalization() {
+        let lhs = strict_canonicalize(Path::new(".")).unwrap();
+        let rhs = strict_canonicalize(&lhs).unwrap();
+        assert_eq!(lhs, rhs);
+    }
+
+    #[test]
+    fn test_path_roundtrip_conversion() {
+        let src = strict_canonicalize(Path::new(".")).unwrap();
+        let conv = Uri::from_file_path(&src).unwrap();
+        let roundtrip = conv.to_file_path().unwrap();
+        assert_eq!(src, roundtrip, "conv={conv:?}",);
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_windows_uri_roundtrip_conversion() {
+        use std::str::FromStr;
+
+        let uri = Uri::from_str("file:///C:/Windows").unwrap();
+        let path = uri.to_file_path().unwrap();
+        assert_eq!(&path, Path::new("C:/Windows"), "uri={uri:?}");
+
+        let conv = Uri::from_file_path(&path).unwrap();
+
+        assert_eq!(
+            uri,
+            conv,
+            "path={path:?} left={} right={}",
+            uri.as_str(),
+            conv.as_str()
+        );
     }
 }
