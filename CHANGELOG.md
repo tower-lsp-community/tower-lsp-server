@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.21.1] - 2025-04-07
+
+### Added
+
+* Export `UriExt` to reduce development friction (#38)
+
 ### Fixed
 
 * Do no panic when recieving a response whose request has been cancelled (#37)
+* Allow `null` param in JSON-RPC response when it should be None (#41)
 
 ## [0.21.0] - 2025-03-16
 
