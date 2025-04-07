@@ -41,17 +41,13 @@ fn strict_canonicalize<P: AsRef<Path>>(path: P) -> std::io::Result<PathBuf> {
     impl_(canon)
 }
 
-/// Provide methods to [`lsp_types::Uri`] to fill blanks left by
-/// `fluent_uri` (the underlying type) especially when converting to and from file paths.
-pub trait UriExt: Sized {
-    /// Convert the path component of a [`lsp_types::Uri`] to a file path.
-    fn to_file_path(&self) -> Option<Cow<Path>>;
-
-    /// Convert a file path to a [`lsp_types::Uri`].
-    fn from_file_path<A: AsRef<Path>>(path: A) -> Option<Self>;
+mod sealed {
+    pub trait Sealed {}
 }
 
-impl UriExt for lsp_types::Uri {
+/// Provide methods to [`lsp_types::Uri`] to fill blanks left by
+/// `fluent_uri` (the underlying type) especially when converting to and from file paths.
+pub trait UriExt: Sized + sealed::Sealed {
     /// Assuming the URL is in the `file` scheme or similar,
     /// convert its path to an absolute `std::path::Path`.
     ///
@@ -59,14 +55,20 @@ impl UriExt for lsp_types::Uri {
     /// give nonsensical results for other schemes. It is the user’s
     /// responsibility to check the URL’s scheme before calling this.
     ///
-    /// ```
-    /// # use lsp_types::Uri;
-    /// # use std::{str::FromStr, path::PathBuf};
-    /// # use tower_lsp_server::UriExt;
-    /// let uri = Uri::from_str("file:///etc/passwd").unwrap();
-    /// let path = uri.to_file_path().unwrap();
-    /// assert_eq!(path, PathBuf::from("/etc/passwd"));
-    /// ```
+    /// e.g. `Uri("file:///etc/passwd")` becomes `PathBuf("/etc/passwd")`
+    fn to_file_path(&self) -> Option<Cow<Path>>;
+
+    /// Convert a file path to a [`lsp_types::Uri`].
+    ///
+    /// Create a [`lsp_types::Uri`] from a file path.
+    ///
+    /// Returns `None` if the file does not exist.
+    fn from_file_path<A: AsRef<Path>>(path: A) -> Option<Self>;
+}
+
+impl sealed::Sealed for lsp_types::Uri {}
+
+impl UriExt for lsp_types::Uri {
     fn to_file_path(&self) -> Option<Cow<Path>> {
         let path = match self.path().as_estr().decode().into_string_lossy() {
             Cow::Borrowed(ref_) => Cow::Borrowed(Path::new(ref_)),
@@ -96,7 +98,6 @@ impl UriExt for lsp_types::Uri {
         }
     }
 
-    /// Create a [`lsp_types::Uri`] from a file path.
     fn from_file_path<A: AsRef<Path>>(path: A) -> Option<Self> {
         let path = path.as_ref();
 
