@@ -114,13 +114,24 @@ impl UriExt for lsp_types::Uri {
             let f = fragment.to_string_lossy().replace("\\", "/");
 
             // encode without `C:/`
-            let encode_uri = urlencoding::encode(&f[3..]);
+            let components: Vec<_> = f.split('/').collect();
+            let mut ret = vec![Cow::Borrowed(components[0])];
+            for c in components.iter().skip(1) {
+                ret.push(urlencoding::encode(c));
+            }
+
+            let encode_uri = ret.join("/");
             // we want to parse a triple-slash path for Windows paths
             // it's a shorthand for `file://localhost/C:/Windows` with the `localhost` omitted
-            format!("file:///{}{}", &f[0..3].to_uppercase(), encode_uri)
+            format!("file:///{}", encode_uri)
         } else {
             let f = fragment.to_string_lossy();
-            let encode_uri = urlencoding::encode(&f);
+            let components: Vec<_> = f.split('/').collect();
+            let mut ret = vec![];
+            for c in components.iter() {
+                ret.push(urlencoding::encode(c));
+            }
+            let encode_uri = ret.join("/");
             format!("file://{}", encode_uri)
         };
 
@@ -177,8 +188,7 @@ mod tests {
         use std::str::FromStr;
 
         // FIXME: have to do the encode by user self now
-        let url_encode = urlencoding::encode("Windows/中文");
-        let uri = Uri::from_str(&format!("file:///C:/{}", url_encode)).unwrap();
+        let uri = Uri::from_str("file:///C:/Windows/%E4%B8%AD%E6%96%87").unwrap();
 
         let path = uri.to_file_path().unwrap();
         assert_eq!(&path, Path::new("C:/Windows/中文"), "uri={uri:?}");
