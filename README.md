@@ -45,9 +45,9 @@ Tower is a simple and composable framework for implementing asynchronous service
 
 You can check LSP specification coverage in [`FEATURE.md`](https://github.com/tower-lsp-community/tower-lsp-server/blob/main/FEATURES.md).
 
-# Usage
+## Usage
 
-## Minimal example
+### Minimal example
 
 ```rust
 use tower_lsp_server::jsonrpc::Result;
@@ -102,7 +102,7 @@ features = ["runtime-agnostic"]
 
 You can use enable proposed features in the [LSP Specification version 3.18](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/) by enabling the `proposed` Cargo crate feature. Note that there are no semver guarantees to the `proposed` features so there may be breaking changes between any type of version in the `proposed` features.
 
-# Projects using `tower-lsp-server`
+## Projects using `tower-lsp-server`
 
 - [Harper](https://github.com/Automattic/harper)
 - [Polarity](https://github.com/polarity-lang/polarity/): both for their language server and their [interactive web demo](https://polarity-lang.github.io).
@@ -111,11 +111,11 @@ You can use enable proposed features in the [LSP Specification version 3.18](htt
 - [Veryl](https://github.com/veryl-lang/veryl)
 - [django-language-server](https://github.com/joshuadavidthomas/django-language-server)
 
-# Ecosystem
+## Ecosystem
 
 - [tower-lsp-boilerplate](https://github.com/IWANABETHATGUY/tower-lsp-boilerplate) - Useful GitHub project template which makes writing new language servers easier. This is made for the original project but should be straight forward to adapt. Issue [#23](https://github.com/tower-lsp-community/tower-lsp-server/issues/23) proposes to host a similar project within the organization
 
-# License
+## License
 
 `tower-lsp-server` is free and open source software distributed under the terms of either the [MIT](LICENSE-MIT) or the [Apache 2.0](LICENSE-APACHE) license, at your option.
 
