@@ -17,15 +17,15 @@ fn strict_canonicalize<P: AsRef<Path>>(path: P) -> std::io::Result<PathBuf> {
         let head = path
             .components()
             .next()
-            .ok_or(io::Error::new(io::ErrorKind::Other, "empty path"))?;
+            .ok_or(io::Error::other("empty path"))?;
         let disk_;
         let head = if let std::path::Component::Prefix(prefix) = head {
             if let std::path::Prefix::VerbatimDisk(disk) = prefix.kind() {
                 disk_ = format!("{}:", disk as char);
-                Path::new(&disk_).components().next().ok_or(io::Error::new(
-                    io::ErrorKind::Other,
-                    "failed to parse disk component",
-                ))?
+                Path::new(&disk_)
+                    .components()
+                    .next()
+                    .ok_or(io::Error::other("failed to parse disk component"))?
             } else {
                 head
             }
@@ -111,11 +111,28 @@ impl UriExt for lsp_types::Uri {
         };
 
         let raw_uri = if cfg!(windows) {
+            let f = fragment.to_string_lossy().replace("\\", "/");
+
+            // encode without `C:/`
+            let components: Vec<_> = f.split('/').collect();
+            let mut ret = vec![Cow::Borrowed(components[0])];
+            for c in components.iter().skip(1) {
+                ret.push(urlencoding::encode(c));
+            }
+
+            let encode_uri = ret.join("/");
             // we want to parse a triple-slash path for Windows paths
             // it's a shorthand for `file://localhost/C:/Windows` with the `localhost` omitted
-            format!("file:///{}", fragment.to_string_lossy().replace("\\", "/"))
+            format!("file:///{}", encode_uri)
         } else {
-            format!("file://{}", fragment.to_string_lossy())
+            let f = fragment.to_string_lossy();
+            let components: Vec<_> = f.split('/').collect();
+            let mut ret = vec![];
+            for c in components.iter() {
+                ret.push(urlencoding::encode(c));
+            }
+            let encode_uri = ret.join("/");
+            format!("file://{}", encode_uri)
         };
 
         Uri::from_str(&raw_uri).ok()
@@ -153,6 +170,28 @@ mod tests {
         let uri = Uri::from_str("file:///C:/Windows").unwrap();
         let path = uri.to_file_path().unwrap();
         assert_eq!(&path, Path::new("C:/Windows"), "uri={uri:?}");
+
+        let conv = Uri::from_file_path(&path).unwrap();
+
+        assert_eq!(
+            uri,
+            conv,
+            "path={path:?} left={} right={}",
+            uri.as_str(),
+            conv.as_str()
+        );
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_windows_uri_roundtrip_conversion_with_chinese() {
+        use std::str::FromStr;
+
+        // FIXME: have to do the encode by user self now
+        let uri = Uri::from_str("file:///C:/Windows/%E4%B8%AD%E6%96%87").unwrap();
+
+        let path = uri.to_file_path().unwrap();
+        assert_eq!(&path, Path::new("C:/Windows/中文"), "uri={uri:?}");
 
         let conv = Uri::from_file_path(&path).unwrap();
 
