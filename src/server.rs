@@ -36,7 +36,6 @@ macro_rules! rpc {
         pub(crate) mod generated {
             use crate::jsonrpc::Router;
             use crate::service::{layers, Client, Pending, ServerState, ExitedError};
-            use lsp_types::*;
             use std::sync::Arc;
             use super::LanguageServer;
 
@@ -64,15 +63,6 @@ macro_rules! rpc {
                     // this closure is never called
                     |_: &S| std::future::ready(()),
                     layers::Exit::new(state.clone(), pending.clone(), client.clone()),
-                );
-
-                router.method(
-                    "$/cancelRequest",
-                    move |_: &S, params: CancelParams| {
-                        pending.cancel(&params.id.into());
-                        std::future::ready(())
-                    },
-                    tower::layer::util::Identity::new(),
                 );
 
                 router
@@ -104,25 +94,23 @@ macro_rules! rpc {
 
     // `register` fragment: add the method to the tower router
     (@register $rpc_name:literal, initialize, $router:ident, $state:ident, $pending:ident) => {
-        $router.method(
-            "initialize",
-            S::initialize,
-            layers::Initialize::new($state.clone(), $pending.clone()),
-        )
+        $router.method("initialize", S::initialize, layers::Initialize::new($state.clone(), $pending.clone()))
     };
     (@register $rpc_name:literal, shutdown, $router:ident, $state:ident, $pending:ident) => {
+        $router.method("shutdown", S::shutdown, layers::Shutdown::new($state.clone(), $pending.clone()))
+    };
+    (@register $rpc_name:literal, post_cancel_request, $router:ident, $state:ident, $pending:ident) => {
         $router.method(
-            "shutdown",
-            S::shutdown,
-            layers::Shutdown::new($state.clone(), $pending.clone()),
-        )
+            "$/cancelRequest",
+            async |state: &S, params: lsp_types::CancelParams| {
+                $pending.clone().cancel(&params.id.clone().into());
+                S::post_cancel_request(state, params).await;
+            },
+            tower::layer::util::Identity::new(),
+        );
     };
     (@register $rpc_name:literal, $rpc_method:ident, $router:ident, $state:ident, $pending:ident) => {
-        $router.method(
-            $rpc_name,
-            S::$rpc_method,
-            layers::Normal::new($state.clone(), $pending.clone()),
-        )
+        $router.method($rpc_name, S::$rpc_method, layers::Normal::new($state.clone(), $pending.clone()))
     };
 }
 
@@ -1387,6 +1375,12 @@ rpc! {
             let _ = params;
             error!("got a `workspace/executeCommand` request, but it is not implemented");
             Err(Error::method_not_found())
+        }
+
+        /// ntm
+        #[rpc(name = "$/cancelRequest")]
+        async fn post_cancel_request(&self, params: CancelParams) {
+            let _ = params;
         }
 
         // TODO: Add `work_done_progress_cancel()` here (since 3.15.0) when supported by `tower-lsp-server`
