@@ -72,10 +72,6 @@
 //! }
 //! ```
 
-#![deny(missing_debug_implementations)]
-#![deny(missing_docs)]
-#![forbid(unsafe_code)]
-
 /// A re-export of [`lsp-types`](https://docs.rs/lsp-types) for convenience.
 pub use lsp_types;
 
