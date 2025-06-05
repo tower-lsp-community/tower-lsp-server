@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+* Fixed the return type for the `workspace/symbol` handler to match the specification (#49)
+
 ## [0.21.1] - 2025-04-07
 
 ### Added
