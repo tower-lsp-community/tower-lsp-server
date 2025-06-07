@@ -40,3 +40,7 @@ async-tungstenite = { version = "0.29", features = ["tokio-runtime"] }
 tokio-util = { version = "0.7", features = ["compat"] }
 tokio = { version = "1", features = ["io-util", "io-std", "macros", "rt-multi-thread", "time"] }
 tracing-subscriber = "0.3"
+
+[patch.crates-io]
+# this patch has the fix for `WorkspaceClientCapabilities`, see tower-lsp-community/tower-lsp-server#50
+lsp-types = { git = "https://github.com/tower-lsp-community/lsp-types", rev = "7332122ee5572c3f2c247b37cd1af77289b2e1c8" }
