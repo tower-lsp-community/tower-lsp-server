@@ -1,4 +1,3 @@
-use lsp_types::Uri;
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -113,12 +112,12 @@ impl UriExt for lsp_types::Uri {
         let raw_uri = if cfg!(windows) {
             // we want to parse a triple-slash path for Windows paths
             // it's a shorthand for `file://localhost/C:/Windows` with the `localhost` omitted
-            format!("file:///{}", fragment.to_string_lossy().replace("\\", "/"))
+            format!("file:///{}", fragment.to_string_lossy().replace('\\', "/"))
         } else {
             format!("file://{}", fragment.to_string_lossy())
         };
 
-        Uri::from_str(&raw_uri).ok()
+        Self::from_str(&raw_uri).ok()
     }
 }
 

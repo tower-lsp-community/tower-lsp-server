@@ -24,7 +24,7 @@ pub struct ServerState(AtomicU8);
 
 impl ServerState {
     pub const fn new() -> Self {
-        ServerState(AtomicU8::new(State::Uninitialized as u8))
+        Self(AtomicU8::new(State::Uninitialized as u8))
     }
 
     pub fn set(&self, state: State) {

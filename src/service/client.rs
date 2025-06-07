@@ -90,6 +90,10 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn register_capability(
         &self,
         registrations: Vec<Registration>,
@@ -111,6 +115,10 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn unregister_capability(
         &self,
         unregisterations: Vec<Unregistration>,
@@ -144,6 +152,10 @@ impl Client {
     /// This corresponds to the [`window/showMessageRequest`] request.
     ///
     /// [`window/showMessageRequest`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessageRequest
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn show_message_request<M: Display>(
         &self,
         typ: MessageType,
@@ -191,6 +203,10 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.16.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn show_document(&self, params: ShowDocumentParams) -> jsonrpc::Result<bool> {
         use lsp_types::request::ShowDocument;
         let response = self.send_request::<ShowDocument>(params).await?;
@@ -244,6 +260,10 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.16.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn code_lens_refresh(&self) -> jsonrpc::Result<()> {
         use lsp_types::request::CodeLensRefresh;
         self.send_request::<CodeLensRefresh>(()).await
@@ -271,6 +291,10 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.16.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn semantic_tokens_refresh(&self) -> jsonrpc::Result<()> {
         use lsp_types::request::SemanticTokensRefresh;
         self.send_request::<SemanticTokensRefresh>(()).await
@@ -297,6 +321,10 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.17.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn inline_value_refresh(&self) -> jsonrpc::Result<()> {
         use lsp_types::request::InlineValueRefreshRequest;
         self.send_request::<InlineValueRefreshRequest>(()).await
@@ -323,6 +351,10 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.17.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn inlay_hint_refresh(&self) -> jsonrpc::Result<()> {
         use lsp_types::request::InlayHintRefreshRequest;
         self.send_request::<InlayHintRefreshRequest>(()).await
@@ -347,6 +379,10 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.17.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn workspace_diagnostic_refresh(&self) -> jsonrpc::Result<()> {
         use lsp_types::request::WorkspaceDiagnosticRefresh;
         self.send_request::<WorkspaceDiagnosticRefresh>(()).await
@@ -397,6 +433,10 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.6.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn configuration(
         &self,
         items: Vec<ConfigurationItem>,
@@ -425,6 +465,10 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.6.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn workspace_folders(&self) -> jsonrpc::Result<Option<Vec<WorkspaceFolder>>> {
         use lsp_types::request::WorkspaceFoldersRequest;
         self.send_request::<WorkspaceFoldersRequest>(()).await
@@ -443,6 +487,10 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn apply_edit(
         &self,
         edit: WorkspaceEdit,
@@ -535,6 +583,11 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Errors
+    ///
+    /// - The client is not yet initialized
+    /// - The client returns an error
     pub async fn send_request<R>(&self, params: R::Params) -> jsonrpc::Result<R::Result>
     where
         R: lsp_types::request::Request,
@@ -556,9 +609,8 @@ impl Client {
         let id = self.next_request_id();
         let request = Request::from_request::<R>(id, params);
 
-        let response = match self.clone().call(request).await {
-            Ok(Some(response)) => response,
-            Ok(None) | Err(_) => return Err(Error::internal_error()),
+        let Ok(Some(response)) = self.clone().call(request).await else {
+            return Err(Error::internal_error());
         };
 
         let (_, result) = response.into_parts();

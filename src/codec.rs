@@ -40,17 +40,17 @@ pub enum ParseError {
 impl Display for ParseError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match *self {
-            ParseError::Body(ref e) => write!(f, "unable to parse JSON body: {e}"),
-            ParseError::Encode(ref e) => write!(f, "failed to encode response: {e}"),
-            ParseError::Headers(ref e) => write!(f, "failed to parse headers: {e}"),
-            ParseError::InvalidContentType => write!(f, "unable to parse content type"),
-            ParseError::InvalidContentLength(ref e) => {
+            Self::Body(ref e) => write!(f, "unable to parse JSON body: {e}"),
+            Self::Encode(ref e) => write!(f, "failed to encode response: {e}"),
+            Self::Headers(ref e) => write!(f, "failed to parse headers: {e}"),
+            Self::InvalidContentType => write!(f, "unable to parse content type"),
+            Self::InvalidContentLength(ref e) => {
                 write!(f, "unable to parse content length: {e}")
             }
-            ParseError::MissingContentLength => {
+            Self::MissingContentLength => {
                 write!(f, "missing required `Content-Length` header")
             }
-            ParseError::Utf8(ref e) => write!(f, "request contains invalid UTF8: {e}"),
+            Self::Utf8(ref e) => write!(f, "request contains invalid UTF8: {e}"),
         }
     }
 }
@@ -58,10 +58,10 @@ impl Display for ParseError {
 impl Error for ParseError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match *self {
-            ParseError::Body(ref e) => Some(e),
-            ParseError::Encode(ref e) => Some(e),
-            ParseError::InvalidContentLength(ref e) => Some(e),
-            ParseError::Utf8(ref e) => Some(e),
+            Self::Body(ref e) => Some(e),
+            Self::Encode(ref e) => Some(e),
+            Self::InvalidContentLength(ref e) => Some(e),
+            Self::Utf8(ref e) => Some(e),
             _ => None,
         }
     }
@@ -69,31 +69,31 @@ impl Error for ParseError {
 
 impl From<serde_json::Error> for ParseError {
     fn from(error: serde_json::Error) -> Self {
-        ParseError::Body(error)
+        Self::Body(error)
     }
 }
 
 impl From<IoError> for ParseError {
     fn from(error: IoError) -> Self {
-        ParseError::Encode(error)
+        Self::Encode(error)
     }
 }
 
 impl From<httparse::Error> for ParseError {
     fn from(error: httparse::Error) -> Self {
-        ParseError::Headers(error)
+        Self::Headers(error)
     }
 }
 
 impl From<ParseIntError> for ParseError {
     fn from(error: ParseIntError) -> Self {
-        ParseError::InvalidContentLength(error)
+        Self::InvalidContentLength(error)
     }
 }
 
 impl From<Utf8Error> for ParseError {
     fn from(error: Utf8Error) -> Self {
-        ParseError::Utf8(error)
+        Self::Utf8(error)
     }
 }
 
@@ -105,7 +105,7 @@ pub struct LanguageServerCodec<T> {
 
 impl<T> Default for LanguageServerCodec<T> {
     fn default() -> Self {
-        LanguageServerCodec {
+        Self {
             content_len: None,
             _marker: PhantomData,
         }
@@ -151,7 +151,7 @@ impl<T: Serialize> Encoder<T> for LanguageServerCodec<T> {
     }
 }
 
-fn number_of_digits(mut n: usize) -> usize {
+const fn number_of_digits(mut n: usize) -> usize {
     let mut num_digits = 0;
 
     while n > 0 {
@@ -233,11 +233,11 @@ fn decode_headers(headers: &[httparse::Header<'_>]) -> Result<usize, ParseError>
                 let charset = string
                     .split(';')
                     .skip(1)
-                    .map(|param| param.trim())
+                    .map(str::trim)
                     .find_map(|param| param.strip_prefix("charset="));
 
                 match charset {
-                    Some("utf-8") | Some("utf8") => {}
+                    Some("utf-8" | "utf8") => {}
                     _ => return Err(ParseError::InvalidContentType),
                 }
             }
@@ -245,11 +245,7 @@ fn decode_headers(headers: &[httparse::Header<'_>]) -> Result<usize, ParseError>
         }
     }
 
-    if let Some(content_len) = content_len {
-        Ok(content_len)
-    } else {
-        Err(ParseError::MissingContentLength)
-    }
+    content_len.ok_or(ParseError::MissingContentLength)
 }
 
 #[cfg(test)]

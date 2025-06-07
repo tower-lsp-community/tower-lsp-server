@@ -44,30 +44,32 @@ pub enum ErrorCode {
 
 impl ErrorCode {
     /// Returns the integer error code value.
+    #[must_use]
     pub const fn code(&self) -> i64 {
         match *self {
-            ErrorCode::ParseError => -32700,
-            ErrorCode::InvalidRequest => -32600,
-            ErrorCode::MethodNotFound => -32601,
-            ErrorCode::InvalidParams => -32602,
-            ErrorCode::InternalError => -32603,
-            ErrorCode::RequestCancelled => -32800,
-            ErrorCode::ContentModified => -32801,
-            ErrorCode::ServerError(code) => code,
+            Self::ParseError => -32700,
+            Self::InvalidRequest => -32600,
+            Self::MethodNotFound => -32601,
+            Self::InvalidParams => -32602,
+            Self::InternalError => -32603,
+            Self::RequestCancelled => -32800,
+            Self::ContentModified => -32801,
+            Self::ServerError(code) => code,
         }
     }
 
     /// Returns a human-readable description of the error.
+    #[must_use]
     pub const fn description(&self) -> &'static str {
         match *self {
-            ErrorCode::ParseError => "Parse error",
-            ErrorCode::InvalidRequest => "Invalid request",
-            ErrorCode::MethodNotFound => "Method not found",
-            ErrorCode::InvalidParams => "Invalid params",
-            ErrorCode::InternalError => "Internal error",
-            ErrorCode::RequestCancelled => "Canceled",
-            ErrorCode::ContentModified => "Content modified",
-            ErrorCode::ServerError(_) => "Server error",
+            Self::ParseError => "Parse error",
+            Self::InvalidRequest => "Invalid request",
+            Self::MethodNotFound => "Method not found",
+            Self::InvalidParams => "Invalid params",
+            Self::InternalError => "Internal error",
+            Self::RequestCancelled => "Canceled",
+            Self::ContentModified => "Content modified",
+            Self::ServerError(_) => "Server error",
         }
     }
 }
@@ -75,14 +77,14 @@ impl ErrorCode {
 impl From<i64> for ErrorCode {
     fn from(code: i64) -> Self {
         match code {
-            -32700 => ErrorCode::ParseError,
-            -32600 => ErrorCode::InvalidRequest,
-            -32601 => ErrorCode::MethodNotFound,
-            -32602 => ErrorCode::InvalidParams,
-            -32603 => ErrorCode::InternalError,
-            -32800 => ErrorCode::RequestCancelled,
-            -32801 => ErrorCode::ContentModified,
-            code => ErrorCode::ServerError(code),
+            -32700 => Self::ParseError,
+            -32600 => Self::InvalidRequest,
+            -32601 => Self::MethodNotFound,
+            -32602 => Self::InvalidParams,
+            -32603 => Self::InternalError,
+            -32800 => Self::RequestCancelled,
+            -32801 => Self::ContentModified,
+            code => Self::ServerError(code),
         }
     }
 }
@@ -114,8 +116,9 @@ pub struct Error {
 
 impl Error {
     /// Creates a new error from the given `ErrorCode`.
+    #[must_use]
     pub const fn new(code: ErrorCode) -> Self {
-        Error {
+        Self {
             code,
             message: Cow::Borrowed(code.description()),
             data: None,
@@ -123,18 +126,21 @@ impl Error {
     }
 
     /// Creates a new parse error (`-32700`).
+    #[must_use]
     pub const fn parse_error() -> Self {
-        Error::new(ErrorCode::ParseError)
+        Self::new(ErrorCode::ParseError)
     }
 
     /// Creates a new "invalid request" error (`-32600`).
+    #[must_use]
     pub const fn invalid_request() -> Self {
-        Error::new(ErrorCode::InvalidRequest)
+        Self::new(ErrorCode::InvalidRequest)
     }
 
     /// Creates a new "method not found" error (`-32601`).
+    #[must_use]
     pub const fn method_not_found() -> Self {
-        Error::new(ErrorCode::MethodNotFound)
+        Self::new(ErrorCode::MethodNotFound)
     }
 
     /// Creates a new "invalid params" error (`-32602`).
@@ -142,7 +148,7 @@ impl Error {
     where
         M: Into<Cow<'static, str>>,
     {
-        Error {
+        Self {
             code: ErrorCode::InvalidParams,
             message: message.into(),
             data: None,
@@ -150,8 +156,9 @@ impl Error {
     }
 
     /// Creates a new internal error (`-32603`).
+    #[must_use]
     pub const fn internal_error() -> Self {
-        Error::new(ErrorCode::InternalError)
+        Self::new(ErrorCode::InternalError)
     }
 
     /// Creates a new "request cancelled" error (`-32800`).
@@ -159,8 +166,9 @@ impl Error {
     /// # Compatibility
     ///
     /// This error code is defined by the Language Server Protocol.
+    #[must_use]
     pub const fn request_cancelled() -> Self {
-        Error::new(ErrorCode::RequestCancelled)
+        Self::new(ErrorCode::RequestCancelled)
     }
 
     /// Creates a new "content modified" error (`-32801`).
@@ -168,8 +176,9 @@ impl Error {
     /// # Compatibility
     ///
     /// This error code is defined by the Language Server Protocol.
+    #[must_use]
     pub const fn content_modified() -> Self {
-        Error::new(ErrorCode::ContentModified)
+        Self::new(ErrorCode::ContentModified)
     }
 }
 
@@ -185,7 +194,7 @@ impl std::error::Error for Error {}
 ///
 /// See [here](https://microsoft.github.io/language-server-protocol/specification#initialize)
 /// for reference.
-pub(crate) const fn not_initialized_error() -> Error {
+pub const fn not_initialized_error() -> Error {
     Error {
         code: ErrorCode::ServerError(-32002),
         message: Cow::Borrowed("Server not initialized"),

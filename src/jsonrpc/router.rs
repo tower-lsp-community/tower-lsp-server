@@ -26,7 +26,7 @@ pub struct Router<S, E = Infallible> {
 impl<S: Send + Sync + 'static, E> Router<S, E> {
     /// Creates a new `Router` with the given shared state.
     pub fn new(server: S) -> Self {
-        Router {
+        Self {
             server: Arc::new(server),
             methods: HashMap::new(),
         }
@@ -110,7 +110,7 @@ impl<P: FromParams, R: IntoResponse, E> MethodHandler<P, R, E> {
         F: Fn(P) -> Fut + Send + 'static,
         Fut: Future<Output = R> + Send + 'static,
     {
-        MethodHandler {
+        Self {
             f: Box::new(move |p| handler(p).boxed()),
             _marker: PhantomData,
         }
@@ -178,7 +178,7 @@ where
     type Future = Fut;
 
     #[inline]
-    fn invoke(&self, server: S, _: ()) -> Self::Future {
+    fn invoke(&self, server: S, (): ()) -> Self::Future {
         self(server)
     }
 }
@@ -201,6 +201,10 @@ where
 /// A trait implemented by all JSON-RPC method parameters.
 pub trait FromParams: private::Sealed + Send + Sized + 'static {
     /// Attempts to deserialize `Self` from the `params` value extracted from [`Request`].
+    ///
+    /// # Errors
+    ///
+    /// - If the given parameters don't match the expected shape
     fn from_params(params: Option<LSPAny>) -> super::Result<Self>;
 }
 
@@ -208,11 +212,11 @@ pub trait FromParams: private::Sealed + Send + Sized + 'static {
 impl FromParams for () {
     fn from_params(params: Option<LSPAny>) -> super::Result<Self> {
         match params {
-            None => Ok(()),
+            None
             // See #40: allow lsp clients (e.g. `lsp4j`) to not precisely
             // respect the specification and set `params` to `null` when it
             // should not be present at all.
-            Some(LSPAny::Null) => Ok(()),
+            | Some(LSPAny::Null) => Ok(()),
             Some(p) => Err(Error::invalid_params(format!("Unexpected params: {p}"))),
         }
     }
@@ -221,13 +225,14 @@ impl FromParams for () {
 /// Deserialize required JSON-RPC parameters.
 impl<P: DeserializeOwned + Send + 'static> FromParams for (P,) {
     fn from_params(params: Option<LSPAny>) -> super::Result<Self> {
-        if let Some(p) = params {
-            serde_json::from_value(p)
-                .map(|params| (params,))
-                .map_err(|e| Error::invalid_params(e.to_string()))
-        } else {
-            Err(Error::invalid_params("Missing params field"))
-        }
+        params.map_or_else(
+            || Err(Error::invalid_params("Missing params field")),
+            |p| {
+                serde_json::from_value(p)
+                    .map(|params| (params,))
+                    .map_err(|e| Error::invalid_params(e.to_string()))
+            },
+        )
     }
 }
 
@@ -242,6 +247,7 @@ pub trait IntoResponse: private::Sealed + Send + 'static {
 
 /// Support JSON-RPC notification methods.
 impl IntoResponse for () {
+    #[expect(clippy::single_option_map, reason = "we cannot change trait signature")]
     fn into_response(self, id: Option<Id>) -> Option<Response> {
         id.map(|id| Response::from_error(id, Error::invalid_request()))
     }
@@ -256,7 +262,7 @@ impl IntoResponse for () {
 impl<R: Serialize + Send + 'static> IntoResponse for Result<R, Error> {
     fn into_response(self, id: Option<Id>) -> Option<Response> {
         debug_assert!(id.is_some(), "Requests always contain an `id` field");
-        if let Some(id) = id {
+        id.map(|id| {
             let result = self.and_then(|r| {
                 serde_json::to_value(r).map_err(|e| Error {
                     code: ErrorCode::InternalError,
@@ -264,10 +270,8 @@ impl<R: Serialize + Send + 'static> IntoResponse for Result<R, Error> {
                     data: None,
                 })
             });
-            Some(Response::from_parts(id, result))
-        } else {
-            None
-        }
+            Response::from_parts(id, result)
+        })
     }
 
     #[inline]
@@ -298,6 +302,7 @@ mod tests {
 
     struct Mock;
 
+    #[expect(clippy::unused_async)]
     impl Mock {
         async fn request(&self) -> Result<LSPAny, Error> {
             Ok(LSPAny::Null)

@@ -49,9 +49,12 @@ missing_docs = "warn"
 all = "warn"
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
-# nursery = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
 # cargo = { level = "warn", priority = -1 }
 
 dbg_macro = "warn"
 todo = "warn"
 unwrap_used = "warn"
+
+# As of right now, lsp_types has no prelude
+wildcard_imports = "allow"

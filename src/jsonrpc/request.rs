@@ -55,10 +55,12 @@ impl Request {
     where
         R: lsp_types::request::Request,
     {
-        Request {
+        let params = serde_json::to_value(params).expect("request params cannot be serialized");
+
+        Self {
             jsonrpc: Version,
             method: R::METHOD.into(),
-            params: Some(serde_json::to_value(params).unwrap()),
+            params: Some(params),
             id: Some(id),
         }
     }
@@ -74,30 +76,37 @@ impl Request {
     where
         N: lsp_types::notification::Notification,
     {
-        Request {
+        let params =
+            serde_json::to_value(params).expect("notification params cannot be serialized");
+
+        Self {
             jsonrpc: Version,
             method: N::METHOD.into(),
-            params: Some(serde_json::to_value(params).unwrap()),
+            params: Some(params),
             id: None,
         }
     }
 
     /// Returns the name of the method to be invoked.
+    #[must_use]
     pub fn method(&self) -> &str {
         self.method.as_ref()
     }
 
     /// Returns the unique ID of this request, if present.
-    pub fn id(&self) -> Option<&Id> {
+    #[must_use]
+    pub const fn id(&self) -> Option<&Id> {
         self.id.as_ref()
     }
 
     /// Returns the `params` field, if present.
-    pub fn params(&self) -> Option<&LSPAny> {
+    #[must_use]
+    pub const fn params(&self) -> Option<&LSPAny> {
         self.params.as_ref()
     }
 
     /// Splits this request into the method name, request ID, and the `params` field, if present.
+    #[must_use]
     pub fn into_parts(self) -> (Cow<'static, str>, Option<Id>, Option<LSPAny>) {
         (self.method, self.id, self.params)
     }
@@ -155,6 +164,7 @@ impl RequestBuilder {
     /// Sets the `id` member of the request to the given value.
     ///
     /// If this method is not called, the resulting `Request` will be assumed to be a notification.
+    #[must_use]
     pub fn id<I: Into<Id>>(mut self, id: I) -> Self {
         self.id = Some(id.into());
         self
@@ -163,12 +173,14 @@ impl RequestBuilder {
     /// Sets the `params` member of the request to the given value.
     ///
     /// This member is omitted from the request by default.
+    #[must_use]
     pub fn params<V: Into<LSPAny>>(mut self, params: V) -> Self {
         self.params = Some(params.into());
         self
     }
 
     /// Constructs the JSON-RPC request and returns it.
+    #[must_use]
     pub fn finish(self) -> Request {
         Request {
             jsonrpc: Version,

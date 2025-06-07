@@ -27,7 +27,7 @@ impl ClientSocket {
     /// [`Stream`]: futures::Stream
     /// [`Sink`]: futures::Sink
     pub fn split(self) -> (RequestStream, ResponseSink) {
-        let ClientSocket { rx, pending, state } = self;
+        let Self { rx, pending, state } = self;
         let state_ = state.clone();
 
         (

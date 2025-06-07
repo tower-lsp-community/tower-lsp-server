@@ -24,8 +24,9 @@ pub struct Response {
 
 impl Response {
     /// Creates a new successful response from a request ID and `Error` object.
+    #[must_use]
     pub const fn from_ok(id: Id, result: LSPAny) -> Self {
-        Response {
+        Self {
             jsonrpc: Version,
             kind: Kind::Ok { result },
             id,
@@ -33,8 +34,9 @@ impl Response {
     }
 
     /// Creates a new error response from a request ID and `Error` object.
+    #[must_use]
     pub const fn from_error(id: Id, error: Error) -> Self {
-        Response {
+        Self {
             jsonrpc: Version,
             kind: Kind::Err { error },
             id,
@@ -42,10 +44,11 @@ impl Response {
     }
 
     /// Creates a new response from a request ID and either an `Ok(Value)` or `Err(Error)` body.
+    #[must_use]
     pub fn from_parts(id: Id, body: Result<LSPAny>) -> Self {
         match body {
-            Ok(result) => Response::from_ok(id, result),
-            Err(error) => Response::from_error(id, error),
+            Ok(result) => Self::from_ok(id, result),
+            Err(error) => Self::from_error(id, error),
         }
     }
 
@@ -59,11 +62,13 @@ impl Response {
     }
 
     /// Returns `true` if the response indicates success.
+    #[must_use]
     pub const fn is_ok(&self) -> bool {
         matches!(self.kind, Kind::Ok { .. })
     }
 
     /// Returns `true` if the response indicates failure.
+    #[must_use]
     pub const fn is_error(&self) -> bool {
         !self.is_ok()
     }
@@ -71,24 +76,27 @@ impl Response {
     /// Returns the `result` value, if it exists.
     ///
     /// This member only exists if the response indicates success.
+    #[must_use]
     pub const fn result(&self) -> Option<&LSPAny> {
         match &self.kind {
             Kind::Ok { result } => Some(result),
-            _ => None,
+            Kind::Err { .. } => None,
         }
     }
 
     /// Returns the `error` value, if it exists.
     ///
     /// This member only exists if the response indicates failure.
+    #[must_use]
     pub const fn error(&self) -> Option<&Error> {
         match &self.kind {
             Kind::Err { error } => Some(error),
-            _ => None,
+            Kind::Ok { .. } => None,
         }
     }
 
     /// Returns the corresponding request ID, if known.
+    #[must_use]
     pub const fn id(&self) -> &Id {
         &self.id
     }

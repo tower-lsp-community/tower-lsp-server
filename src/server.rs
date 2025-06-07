@@ -33,14 +33,14 @@ macro_rules! rpc {
             )+
         }
 
-        pub(crate) mod generated {
+        pub mod generated {
             use crate::jsonrpc::Router;
             use crate::service::{layers, Client, Pending, ServerState, ExitedError};
             use lsp_types::*;
             use std::sync::Arc;
             use super::LanguageServer;
 
-            pub(crate) fn register_lsp_methods<S>(
+            pub fn register_lsp_methods<S>(
                 mut router: Router<S, ExitedError>,
                 state: Arc<ServerState>,
                 pending: Arc<Pending>,

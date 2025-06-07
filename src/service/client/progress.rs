@@ -44,8 +44,8 @@ pub struct Progress<B = Unbounded, C = NotCancellable> {
 }
 
 impl Progress {
-    pub(crate) fn new(client: Client, token: ProgressToken, title: String) -> Self {
-        Progress {
+    pub(crate) const fn new(client: Client, token: ProgressToken, title: String) -> Self {
+        Self {
             client,
             token,
             begin_msg: WorkDoneProgressBegin {
@@ -136,7 +136,7 @@ impl<B, C> Debug for Progress<B, C> {
         f.debug_struct(stringify!(Progress))
             .field("token", &self.token)
             .field("properties", &self.begin_msg)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -150,7 +150,7 @@ pub struct OngoingProgress<B, C> {
     _kind: PhantomData<(B, C)>,
 }
 
-impl<B, C> OngoingProgress<B, C> {
+impl<B: Sync, C: Sync> OngoingProgress<B, C> {
     async fn send_progress_report(&self, report: WorkDoneProgressReport) {
         self.client
             .send_notification::<ProgressNotification>(ProgressParams {
@@ -357,7 +357,8 @@ impl<B, C> OngoingProgress<B, C> {
     }
 
     /// Returns the `ProgressToken` associated with this long-running operation.
-    pub fn token(&self) -> &ProgressToken {
+    #[must_use]
+    pub const fn token(&self) -> &ProgressToken {
         &self.token
     }
 }
@@ -366,6 +367,6 @@ impl<B, C> Debug for OngoingProgress<B, C> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         f.debug_struct(stringify!(OngoingProgress))
             .field("token", &self.token)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
