@@ -6,7 +6,7 @@ use std::str::FromStr;
 #[cfg(not(windows))]
 pub use std::fs::canonicalize as strict_canonicalize;
 
-/// On Windows, rewrites the wide path prefix `\\?\C:` to `C:`  
+/// On Windows, rewrites the wide path prefix `\\?\C:` to `C:`
 /// Source: https://stackoverflow.com/a/70970317
 #[inline]
 #[cfg(windows)]
@@ -70,14 +70,14 @@ impl sealed::Sealed for lsp_types::Uri {}
 
 impl UriExt for lsp_types::Uri {
     fn to_file_path(&self) -> Option<Cow<Path>> {
-        let path = match self.path().as_estr().decode().into_string_lossy() {
+        let path = match self.path().decode().into_string_lossy() {
             Cow::Borrowed(ref_) => Cow::Borrowed(Path::new(ref_)),
             Cow::Owned(owned) => Cow::Owned(PathBuf::from(owned)),
         };
 
         if cfg!(windows) {
             let authority = self.authority().expect("url has no authority component");
-            let host = authority.host().as_str();
+            let host = authority.host();
             if host.is_empty() {
                 // very high chance this is a `file:///` uri
                 // in which case the path will include a leading slash we need to remove
