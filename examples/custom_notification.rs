@@ -1,8 +1,11 @@
+//! Shows how to send custom notification using `Client::send_notification`.
+
 use serde::{Deserialize, Serialize};
-use tower_lsp_server::jsonrpc::{Error, Result};
-use tower_lsp_server::lsp_types::notification::Notification;
-use tower_lsp_server::lsp_types::*;
-use tower_lsp_server::{Client, LanguageServer, LspService, Server};
+use tower_lsp_server::{
+    jsonrpc::{Error, Result},
+    lsp_types::{notification::Notification, *},
+    Client, LanguageServer, LspService, Server,
+};
 
 #[derive(Debug, Deserialize, Serialize)]
 struct CustomNotificationParams {
@@ -12,7 +15,7 @@ struct CustomNotificationParams {
 
 impl CustomNotificationParams {
     fn new(title: impl Into<String>, message: impl Into<String>) -> Self {
-        CustomNotificationParams {
+        Self {
             title: title.into(),
             message: message.into(),
         }
@@ -39,7 +42,7 @@ impl LanguageServer for Backend {
             capabilities: ServerCapabilities {
                 execute_command_provider: Some(ExecuteCommandOptions {
                     commands: vec!["custom.notification".to_string()],
-                    work_done_progress_options: Default::default(),
+                    ..Default::default()
                 }),
                 ..ServerCapabilities::default()
             },
@@ -54,17 +57,18 @@ impl LanguageServer for Backend {
 
     async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<LSPAny>> {
         if params.command == "custom.notification" {
+            let custom_notification = CustomNotificationParams::new("Hello", "Message");
             self.client
-                .send_notification::<CustomNotification>(CustomNotificationParams::new(
-                    "Hello", "Message",
-                ))
+                .send_notification::<CustomNotification>(custom_notification)
                 .await;
+
             self.client
                 .log_message(
                     MessageType::INFO,
                     format!("Command executed with params: {params:?}"),
                 )
                 .await;
+
             Ok(None)
         } else {
             Err(Error::invalid_request())
