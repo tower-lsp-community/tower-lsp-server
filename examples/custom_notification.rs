@@ -2,9 +2,9 @@
 
 use serde::{Deserialize, Serialize};
 use tower_lsp_server::{
+    Client, LanguageServer, LspService, Server,
     jsonrpc::{Error, Result},
     lsp_types::{notification::Notification, *},
-    Client, LanguageServer, LspService, Server,
 };
 
 #[derive(Debug, Deserialize, Serialize)]

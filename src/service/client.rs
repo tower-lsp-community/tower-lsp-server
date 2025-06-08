@@ -3,8 +3,8 @@
 pub use self::socket::{ClientSocket, RequestStream, ResponseSink};
 
 use std::fmt::{self, Debug, Display, Formatter};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::task::{Context, Poll};
 
 use futures::channel::mpsc::{self, Sender};
@@ -17,8 +17,8 @@ use tracing::{error, trace};
 
 use self::pending::Pending;
 use self::progress::Progress;
-use super::state::{ServerState, State};
 use super::ExitedError;
+use super::state::{ServerState, State};
 use crate::jsonrpc::{self, Error, ErrorCode, Id, Request, Response};
 
 pub mod progress;

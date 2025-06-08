@@ -10,8 +10,8 @@ use std::task::{Context, Poll};
 
 use futures::future::{self, BoxFuture, FutureExt};
 use lsp_types::LSPAny;
-use serde::{de::DeserializeOwned, Serialize};
-use tower::{util::BoxService, Layer, Service};
+use serde::{Serialize, de::DeserializeOwned};
+use tower::{Layer, Service, util::BoxService};
 
 use crate::jsonrpc::ErrorCode;
 
@@ -289,8 +289,8 @@ mod private {
 mod tests {
     use serde::{Deserialize, Serialize};
     use serde_json::json;
-    use tower::layer::layer_fn;
     use tower::ServiceExt;
+    use tower::layer::layer_fn;
 
     use super::*;
 

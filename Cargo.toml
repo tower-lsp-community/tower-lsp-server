@@ -2,7 +2,7 @@
 name = "tower-lsp-server"
 version = "0.21.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "Language Server Protocol implementation based on Tower"
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/tower-lsp-community/tower-lsp-server"
@@ -12,7 +12,7 @@ readme = "README.md"
 categories = ["asynchronous"]
 keywords = ["language-server", "lsp", "tower"]
 exclude = ["FEATURES.md"]
-rust-version = "1.77"
+rust-version = "1.85"
 
 [features]
 default = ["runtime-tokio"]

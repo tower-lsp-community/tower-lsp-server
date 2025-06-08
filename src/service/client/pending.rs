@@ -3,7 +3,7 @@
 use std::fmt::{self, Debug, Formatter};
 use std::future::Future;
 
-use dashmap::{mapref::entry::Entry, DashMap};
+use dashmap::{DashMap, mapref::entry::Entry};
 use futures::channel::oneshot;
 use tracing::warn;
 

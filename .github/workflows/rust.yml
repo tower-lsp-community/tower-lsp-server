@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust-version: [1.82.0, 1.77.0, nightly]
+        rust-version: [1.85.0, nightly]
         runtime: [runtime-tokio, runtime-agnostic]
 
     steps:

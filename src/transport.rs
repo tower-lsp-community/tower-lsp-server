@@ -12,7 +12,7 @@ use tokio_util::codec::{FramedRead, FramedWrite};
 
 use futures::channel::mpsc;
 use futures::{
-    future, join, stream, stream_select, FutureExt, Sink, SinkExt, Stream, StreamExt, TryFutureExt,
+    FutureExt, Sink, SinkExt, Stream, StreamExt, TryFutureExt, future, join, stream, stream_select,
 };
 use tower::Service;
 use tracing::error;

@@ -1,6 +1,6 @@
 //! Service abstraction for language servers.
 
-pub use self::client::{progress, Client, ClientSocket, RequestStream, ResponseSink};
+pub use self::client::{Client, ClientSocket, RequestStream, ResponseSink, progress};
 
 pub use self::pending::Pending;
 pub use self::state::{ServerState, State};
@@ -13,10 +13,10 @@ use futures::future::{self, BoxFuture, FutureExt};
 use lsp_types::LSPAny;
 use tower::Service;
 
+use crate::LanguageServer;
 use crate::jsonrpc::{
     Error, ErrorCode, FromParams, IntoResponse, Method, Request, Response, Router,
 };
-use crate::LanguageServer;
 
 pub mod layers;
 
