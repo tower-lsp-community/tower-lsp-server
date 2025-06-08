@@ -182,6 +182,19 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
+    fn test_unix_uri_roundtrip_conversion() {
+        use std::str::FromStr;
+
+        let uri = Uri::from_str("file:///path/to/a/file").unwrap();
+        let path = uri.to_file_path().unwrap();
+        assert_eq!(&path, Path::new("/path/to/a/file"), "uri={uri:?}");
+
+        let conv = Uri::from_file_path(&path).unwrap();
+        assert_eq!(uri, conv);
+    }
+
+    #[test]
     #[cfg(windows)]
     fn test_windows_uri_roundtrip_conversion() {
         use std::str::FromStr;
