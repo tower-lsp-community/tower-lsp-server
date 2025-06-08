@@ -75,23 +75,26 @@ impl UriExt for lsp_types::Uri {
         };
 
         if cfg!(windows) {
-            let authority = self.authority().expect("url has no authority component");
-            let host = authority.host().as_str();
-            if host.is_empty() {
-                // very high chance this is a `file:///` uri
-                // in which case the path will include a leading slash we need to remove
-                let host = path.to_string_lossy();
-                let host = &host[1..];
-                return Some(Cow::Owned(PathBuf::from(host)));
-            }
-
-            let host = format!("{host}:");
-            Some(Cow::Owned(
-                Path::new(&host)
-                    .components()
-                    .chain(path.components())
-                    .collect(),
-            ))
+            self.authority().map_or_else(
+                || {
+                    // very high chance this is a `file:///c:/...` uri
+                    // in which case the path will include a leading slash we
+                    // need to remove to get `c:/...`
+                    let host = path.to_string_lossy();
+                    let host = &host[1..];
+                    Some(Cow::Owned(PathBuf::from(host)))
+                },
+                |authority| {
+                    // `file://server/...` becomes `server:/`
+                    let host = format!("{}:", authority.host());
+                    Some(Cow::Owned(
+                        Path::new(&host)
+                            .components()
+                            .chain(path.components())
+                            .collect(),
+                    ))
+                },
+            )
         } else {
             Some(path)
         }
