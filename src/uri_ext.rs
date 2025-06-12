@@ -128,7 +128,7 @@ impl UriExt for lsp_types::Uri {
             format!(
                 "file:///{}",
                 percent_encoding::utf8_percent_encode(
-                    &fragment.to_string_lossy().replace("\\", "/"),
+                    &fragment.to_string_lossy().replace('\\', "/"),
                     &ASCII_SET
                 )
             )
@@ -150,13 +150,8 @@ mod tests {
     use lsp_types::Uri;
     use std::path::{Path, PathBuf};
 
-    const EXPECTED_SCHEMA: &str = if cfg!(target_os = "windows") {
-        "file:///"
-    } else {
-        "file://"
-    };
-
     fn with_schema(path: &str) -> String {
+        const EXPECTED_SCHEMA: &str = if cfg!(windows) { "file:///" } else { "file://" };
         format!("{EXPECTED_SCHEMA}{path}")
     }
 
@@ -182,8 +177,21 @@ mod tests {
         for source in sources {
             let conv = Uri::from_file_path(&source).unwrap();
             let roundtrip = conv.to_file_path().unwrap();
-            assert_eq!(source, roundtrip, "conv={conv:?}",);
+            assert_eq!(source, roundtrip, "conv={conv:?}");
         }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn test_unix_uri_roundtrip_conversion() {
+        use std::str::FromStr;
+
+        let uri = Uri::from_str("file:///path/to/a/file").unwrap();
+        let path = uri.to_file_path().unwrap();
+        assert_eq!(&path, Path::new("/path/to/a/file"), "uri={uri:?}");
+
+        let conv = Uri::from_file_path(&path).unwrap();
+        assert_eq!(uri, conv);
     }
 
     #[test]
@@ -253,8 +261,8 @@ mod tests {
         );
     }
 
-    #[cfg(all(test, target_os = "windows"))]
     #[test]
+    #[cfg(windows)]
     fn test_path_to_uri_windows() {
         let path = PathBuf::from("C:\\some\\path\\to\\file.txt");
         let uri = Uri::from_file_path(&path).unwrap();
