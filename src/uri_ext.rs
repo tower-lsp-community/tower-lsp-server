@@ -199,7 +199,7 @@ mod tests {
     fn test_windows_uri_roundtrip_conversion() {
         use std::str::FromStr;
 
-        let uri = Uri::from_str("file:///C:/Windows").unwrap();
+        let uri = Uri::from_str("file:///C%3A/Windows").unwrap();
         let path = uri.to_file_path().unwrap();
         assert_eq!(&path, Path::new("C:/Windows"), "uri={uri:?}");
 
@@ -213,61 +213,55 @@ mod tests {
             conv.as_str()
         );
     }
-
     #[test]
+    #[cfg(unix)]
     fn test_path_to_uri() {
-        let path = PathBuf::from("/some/path/to/file.txt");
-        let uri = Uri::from_file_path(&path).unwrap();
-        assert_eq!(uri.to_string(), with_schema("/some/path/to/file.txt"));
-    }
+        let paths = [
+            PathBuf::from("/some/path/to/file.txt"),
+            PathBuf::from("/some/path/to/file with spaces.txt"),
+            PathBuf::from("/some/path/[[...rest]]/file.txt"),
+            PathBuf::from("/some/path/to/файл.txt"),
+            PathBuf::from("/some/path/to/文件.txt"),
+        ];
 
-    #[test]
-    fn test_path_to_uri_with_spaces() {
-        let path = PathBuf::from("/some/path/to/file with spaces.txt");
-        let uri = Uri::from_file_path(&path).unwrap();
-        assert_eq!(
-            uri.to_string(),
-            with_schema("/some/path/to/file%20with%20spaces.txt")
-        );
-    }
+        let expected = [
+            with_schema("/some/path/to/file.txt"),
+            with_schema("/some/path/to/file%20with%20spaces.txt"),
+            with_schema("/some/path/%5B%5B...rest%5D%5D/file.txt"),
+            with_schema("/some/path/to/%D1%84%D0%B0%D0%B9%D0%BB.txt"),
+            with_schema("/some/path/to/%E6%96%87%E4%BB%B6.txt"),
+        ];
 
-    #[test]
-    fn test_path_to_uri_with_special_characters() {
-        let path = PathBuf::from("/some/path/[[...rest]]/file.txt");
-        let uri = Uri::from_file_path(&path).unwrap();
-        assert_eq!(
-            uri.to_string(),
-            with_schema("/some/path/%5B%5B...rest%5D%5D/file.txt")
-        );
-    }
-
-    #[test]
-    fn test_path_to_uri_non_ascii() {
-        let path = PathBuf::from("/some/path/to/файл.txt");
-        let uri = Uri::from_file_path(&path).unwrap();
-        assert_eq!(
-            uri.to_string(),
-            with_schema("/some/path/to/%D1%84%D0%B0%D0%B9%D0%BB.txt")
-        );
-    }
-
-    #[test]
-    fn test_path_to_uri_with_unicode() {
-        let path = PathBuf::from("/some/path/to/文件.txt");
-        let uri = Uri::from_file_path(&path).unwrap();
-        assert_eq!(
-            uri.to_string(),
-            with_schema("/some/path/to/%E6%96%87%E4%BB%B6.txt")
-        );
+        for (path, expected) in paths.iter().zip(expected) {
+            let uri = Uri::from_file_path(path).unwrap();
+            assert_eq!(uri.to_string(), expected);
+        }
     }
 
     #[test]
     #[cfg(windows)]
     fn test_path_to_uri_windows() {
-        let path = PathBuf::from("C:\\some\\path\\to\\file.txt");
-        let uri = Uri::from_file_path(&path).unwrap();
+        let paths = [
+            PathBuf::from("C:\\some\\path\\to\\file.txt"),
+            PathBuf::from("C:\\some\\path\\to\\file with spaces.txt"),
+            PathBuf::from("C:\\some\\path\\[[...rest]]\\file.txt"),
+            PathBuf::from("C:\\some\\path\\to\\файл.txt"),
+            PathBuf::from("C:\\some\\path\\to\\文件.txt"),
+        ];
+
         // yes we encode `:` too, LSP allows it
         // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri
-        assert_eq!(uri.to_string(), with_schema("C%3A/some/path/to/file.txt"));
+        let expected = [
+            with_schema("C%3A/some/path/to/file.txt"),
+            with_schema("C%3A/some/path/to/file%20with%20spaces.txt"),
+            with_schema("C%3A/some/path/%5B%5B...rest%5D%5D/file.txt"),
+            with_schema("C%3A/some/path/to/%D1%84%D0%B0%D0%B9%D0%BB.txt"),
+            with_schema("C%3A/some/path/to/%E6%96%87%E4%BB%B6.txt"),
+        ];
+
+        for (path, expected) in paths.iter().zip(expected) {
+            let uri = Uri::from_file_path(path).unwrap();
+            assert_eq!(uri.to_string(), expected);
+        }
     }
 }
