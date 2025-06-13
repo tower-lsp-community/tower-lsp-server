@@ -164,6 +164,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
     fn test_path_roundtrip_conversion() {
         let sources = [
             strict_canonicalize(Path::new(".")).unwrap(),
@@ -182,16 +183,22 @@ mod tests {
     }
 
     #[test]
-    #[cfg(unix)]
-    fn test_unix_uri_roundtrip_conversion() {
-        use std::str::FromStr;
+    #[cfg(windows)]
+    fn test_path_roundtrip_conversion() {
+        let sources = [
+            strict_canonicalize(Path::new(".")).unwrap(),
+            PathBuf::from("C:\\some\\path\\to\\file.txt"),
+            PathBuf::from("C:\\some\\path\\to\\file with spaces.txt"),
+            PathBuf::from("C:\\some\\path\\[[...rest]]\\file.txt"),
+            PathBuf::from("C:\\some\\path\\to\\файл.txt"),
+            PathBuf::from("C:\\some\\path\\to\\文件.txt"),
+        ];
 
-        let uri = Uri::from_str("file:///path/to/a/file").unwrap();
-        let path = uri.to_file_path().unwrap();
-        assert_eq!(&path, Path::new("/path/to/a/file"), "uri={uri:?}");
-
-        let conv = Uri::from_file_path(&path).unwrap();
-        assert_eq!(uri, conv);
+        for source in sources {
+            let conv = Uri::from_file_path(&source).unwrap();
+            let roundtrip = conv.to_file_path().unwrap();
+            assert_eq!(source, roundtrip, "conv={conv:?}");
+        }
     }
 
     #[test]
