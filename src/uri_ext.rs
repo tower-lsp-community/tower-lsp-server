@@ -1,3 +1,4 @@
+use percent_encoding::AsciiSet;
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -80,6 +81,16 @@ pub trait UriExt: Sized + sealed::Sealed {
 
 impl sealed::Sealed for lsp_types::Uri {}
 
+const ASCII_SET: AsciiSet =
+    // RFC3986 allows only alphanumeric characters, `-`, `.`, `_`, and `~` in the path.
+    percent_encoding::NON_ALPHANUMERIC
+        .remove(b'-')
+        .remove(b'.')
+        .remove(b'_')
+        .remove(b'~')
+        // we do not want path separators to be percent-encoded
+        .remove(b'/');
+
 impl UriExt for lsp_types::Uri {
     fn to_file_path(&self) -> Option<Cow<Path>> {
         let path = match self.path().as_estr().decode().into_string_lossy() {
@@ -129,15 +140,20 @@ impl UriExt for lsp_types::Uri {
         #[cfg(windows)]
         let raw_uri = {
             // we want to parse a triple-slash path for Windows paths
-            // it's a shorthand for `file://localhost/C:/Windows` with the `localhost` omitted
+            // it's a shorthand for `file://localhost/C:/Windows` with the `localhost` omitted.
+            // We encode the driver Letter `C:` as well. LSP Specification allows it.
+            // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri
             format!(
                 "file:///{}",
-                capitalize_drive_letter(&fragment.to_string_lossy()).replace('\\', "/")
+                percent_encoding::utf8_percent_encode(
+                    capitalize_drive_letter(&fragment.to_string_lossy().replace('\\', "/")),
+                    &ASCII_SET
+                )
             )
         };
 
         #[cfg(not(windows))]
-        let raw_uri = { format!("file://{}", fragment.to_string_lossy()) };
+        let raw_uri = { format!("file://{}", percent_encoding::utf8_percent_encode(&fragment.to_string_lossy(), &ASCII_SET)) };
 
         Self::from_str(&raw_uri).ok()
     }
@@ -148,7 +164,12 @@ mod tests {
     use super::strict_canonicalize;
     use crate::UriExt;
     use lsp_types::Uri;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
+
+    fn with_schema(path: &str) -> String {
+        const EXPECTED_SCHEMA: &str = if cfg!(windows) { "file:///" } else { "file://" };
+        format!("{EXPECTED_SCHEMA}{path}")
+    }
 
     #[test]
     #[cfg(windows)]
@@ -159,11 +180,41 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
     fn test_path_roundtrip_conversion() {
-        let src = strict_canonicalize(Path::new(".")).unwrap();
-        let conv = Uri::from_file_path(&src).unwrap();
-        let roundtrip = conv.to_file_path().unwrap();
-        assert_eq!(src, roundtrip, "conv={conv:?}",);
+        let sources = [
+            strict_canonicalize(Path::new(".")).unwrap(),
+            PathBuf::from("/some/path/to/file.txt"),
+            PathBuf::from("/some/path/to/file with spaces.txt"),
+            PathBuf::from("/some/path/[[...rest]]/file.txt"),
+            PathBuf::from("/some/path/to/файл.txt"),
+            PathBuf::from("/some/path/to/文件.txt"),
+        ];
+
+        for source in sources {
+            let conv = Uri::from_file_path(&source).unwrap();
+            let roundtrip = conv.to_file_path().unwrap();
+            assert_eq!(source, roundtrip, "conv={conv:?}");
+        }
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_path_roundtrip_conversion() {
+        let sources = [
+            strict_canonicalize(Path::new(".")).unwrap(),
+            PathBuf::from("C:\\some\\path\\to\\file.txt"),
+            PathBuf::from("C:\\some\\path\\to\\file with spaces.txt"),
+            PathBuf::from("C:\\some\\path\\[[...rest]]\\file.txt"),
+            PathBuf::from("C:\\some\\path\\to\\файл.txt"),
+            PathBuf::from("C:\\some\\path\\to\\文件.txt"),
+        ];
+
+        for source in sources {
+            let conv = Uri::from_file_path(&source).unwrap();
+            let roundtrip = conv.to_file_path().unwrap();
+            assert_eq!(source, roundtrip, "conv={conv:?}");
+        }
     }
 
     #[test]
@@ -177,7 +228,7 @@ mod tests {
             Uri::from_str("file:///c%3A/some/path/to/file.txt").unwrap(),
         ];
 
-        let final_uri = Uri::from_str("file:///C:/some/path/to/file.txt").unwrap();
+        let final_uri = Uri::from_str("file:///C%3A/some/path/to/file.txt").unwrap();
 
         for uri in uris {
             let path = uri.to_file_path().unwrap();
@@ -196,6 +247,58 @@ mod tests {
                 final_uri.as_str(),
                 conv.as_str()
             );
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn test_path_to_uri() {
+        let paths = [
+            PathBuf::from("/some/path/to/file.txt"),
+            PathBuf::from("/some/path/to/file with spaces.txt"),
+            PathBuf::from("/some/path/[[...rest]]/file.txt"),
+            PathBuf::from("/some/path/to/файл.txt"),
+            PathBuf::from("/some/path/to/文件.txt"),
+        ];
+
+        let expected = [
+            with_schema("/some/path/to/file.txt"),
+            with_schema("/some/path/to/file%20with%20spaces.txt"),
+            with_schema("/some/path/%5B%5B...rest%5D%5D/file.txt"),
+            with_schema("/some/path/to/%D1%84%D0%B0%D0%B9%D0%BB.txt"),
+            with_schema("/some/path/to/%E6%96%87%E4%BB%B6.txt"),
+        ];
+
+        for (path, expected) in paths.iter().zip(expected) {
+            let uri = Uri::from_file_path(path).unwrap();
+            assert_eq!(uri.to_string(), expected);
+        }
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_path_to_uri_windows() {
+        let paths = [
+            PathBuf::from("C:\\some\\path\\to\\file.txt"),
+            PathBuf::from("C:\\some\\path\\to\\file with spaces.txt"),
+            PathBuf::from("C:\\some\\path\\[[...rest]]\\file.txt"),
+            PathBuf::from("C:\\some\\path\\to\\файл.txt"),
+            PathBuf::from("C:\\some\\path\\to\\文件.txt"),
+        ];
+
+        // yes we encode `:` too, LSP allows it
+        // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri
+        let expected = [
+            with_schema("C%3A/some/path/to/file.txt"),
+            with_schema("C%3A/some/path/to/file%20with%20spaces.txt"),
+            with_schema("C%3A/some/path/%5B%5B...rest%5D%5D/file.txt"),
+            with_schema("C%3A/some/path/to/%D1%84%D0%B0%D0%B9%D0%BB.txt"),
+            with_schema("C%3A/some/path/to/%E6%96%87%E4%BB%B6.txt"),
+        ];
+
+        for (path, expected) in paths.iter().zip(expected) {
+            let uri = Uri::from_file_path(path).unwrap();
+            assert_eq!(uri.to_string(), expected);
         }
     }
 }
