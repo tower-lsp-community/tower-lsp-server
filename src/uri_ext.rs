@@ -146,14 +146,19 @@ impl UriExt for lsp_types::Uri {
             format!(
                 "file:///{}",
                 percent_encoding::utf8_percent_encode(
-                    capitalize_drive_letter(&fragment.to_string_lossy().replace('\\', "/")),
+                    &capitalize_drive_letter(&fragment.to_string_lossy().replace('\\', "/")),
                     &ASCII_SET
                 )
             )
         };
 
         #[cfg(not(windows))]
-        let raw_uri = { format!("file://{}", percent_encoding::utf8_percent_encode(&fragment.to_string_lossy(), &ASCII_SET)) };
+        let raw_uri = {
+            format!(
+                "file://{}",
+                percent_encoding::utf8_percent_encode(&fragment.to_string_lossy(), &ASCII_SET)
+            )
+        };
 
         Self::from_str(&raw_uri).ok()
     }
