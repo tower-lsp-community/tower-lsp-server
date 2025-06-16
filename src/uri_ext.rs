@@ -41,6 +41,19 @@ fn strict_canonicalize<P: AsRef<Path>>(path: P) -> std::io::Result<PathBuf> {
     impl_(canon)
 }
 
+#[cfg(windows)]
+fn capitalize_drive_letter(path: &str) -> String {
+    // Check if it's a Windows path starting with a drive letter like "c:/"
+    if path.len() >= 2 && path.chars().nth(1) == Some(':') {
+        let mut chars = path.chars();
+        let drive_letter = chars.next().unwrap().to_ascii_uppercase();
+        let rest: String = chars.collect();
+        format!("{}{}", drive_letter, rest)
+    } else {
+        path.to_string()
+    }
+}
+
 mod sealed {
     pub trait Sealed {}
 }
@@ -86,19 +99,23 @@ impl UriExt for lsp_types::Uri {
         };
 
         if cfg!(windows) {
-            let authority = self.authority().expect("url has no authority component");
-            let host = authority.host().as_str();
-            if host.is_empty() {
-                // very high chance this is a `file:///` uri
-                // in which case the path will include a leading slash we need to remove
+            let auth_host = self
+                .authority()
+                .map(|auth| auth.host().as_str())
+                .unwrap_or_default();
+
+            if auth_host.is_empty() {
+                // very high chance this is a `file:///c:/...` uri
+                // in which case the path will include a leading slash we
+                // need to remove to get `c:/...`
                 let host = path.to_string_lossy();
                 let host = &host[1..];
                 return Some(Cow::Owned(PathBuf::from(host)));
             }
 
-            let host = format!("{host}:");
             Some(Cow::Owned(
-                Path::new(&host)
+                // `file://server/...` becomes `server:/`
+                Path::new(&format!("{auth_host}:"))
                     .components()
                     .chain(path.components())
                     .collect(),
@@ -120,7 +137,8 @@ impl UriExt for lsp_types::Uri {
             }
         };
 
-        let raw_uri = if cfg!(windows) {
+        #[cfg(windows)]
+        let raw_uri = {
             // we want to parse a triple-slash path for Windows paths
             // it's a shorthand for `file://localhost/C:/Windows` with the `localhost` omitted.
             // We encode the driver Letter `C:` as well. LSP Specification allows it.
@@ -128,11 +146,14 @@ impl UriExt for lsp_types::Uri {
             format!(
                 "file:///{}",
                 percent_encoding::utf8_percent_encode(
-                    &fragment.to_string_lossy().replace('\\', "/"),
+                    &capitalize_drive_letter(&fragment.to_string_lossy().replace('\\', "/")),
                     &ASCII_SET
                 )
             )
-        } else {
+        };
+
+        #[cfg(not(windows))]
+        let raw_uri = {
             format!(
                 "file://{}",
                 percent_encoding::utf8_percent_encode(&fragment.to_string_lossy(), &ASCII_SET)
@@ -206,20 +227,34 @@ mod tests {
     fn test_windows_uri_roundtrip_conversion() {
         use std::str::FromStr;
 
-        let uri = Uri::from_str("file:///C%3A/Windows").unwrap();
-        let path = uri.to_file_path().unwrap();
-        assert_eq!(&path, Path::new("C:/Windows"), "uri={uri:?}");
+        let uris = [
+            Uri::from_str("file:///C:/some/path/to/file.txt").unwrap(),
+            Uri::from_str("file:///c:/some/path/to/file.txt").unwrap(),
+            Uri::from_str("file:///c%3A/some/path/to/file.txt").unwrap(),
+        ];
 
-        let conv = Uri::from_file_path(&path).unwrap();
+        let final_uri = Uri::from_str("file:///C%3A/some/path/to/file.txt").unwrap();
 
-        assert_eq!(
-            uri,
-            conv,
-            "path={path:?} left={} right={}",
-            uri.as_str(),
-            conv.as_str()
-        );
+        for uri in uris {
+            let path = uri.to_file_path().unwrap();
+            assert_eq!(
+                &path,
+                Path::new("C:\\some\\path\\to\\file.txt"),
+                "uri={uri:?}"
+            );
+
+            let conv = Uri::from_file_path(&path).unwrap();
+
+            assert_eq!(
+                final_uri,
+                conv,
+                "path={path:?} left={} right={}",
+                final_uri.as_str(),
+                conv.as_str()
+            );
+        }
     }
+
     #[test]
     #[cfg(unix)]
     fn test_path_to_uri() {
