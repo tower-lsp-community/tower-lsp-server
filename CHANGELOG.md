@@ -7,10 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+
+## [0.22.0] - 2025-04-07
+
 ### Changed
 
 * Fixed the return type for the `workspace/symbol` handler to match the specification (#49)
 * Updated the crate to edition 2024 and bump MSRV to 1.85 accordingly
+
+### Fixed
+
+* Percent encode path in `UriExt::from_file_path` (#53)
+* Consistent windows driver conversion in `UriExt` (#56)
 
 ## [0.21.1] - 2025-04-07
 
