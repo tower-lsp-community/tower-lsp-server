@@ -63,6 +63,30 @@ impl<S: Send + Sync + 'static, E> Router<S, E> {
 
         self
     }
+
+    pub fn method_arc<P, R, F, L>(&mut self, name: &'static str, callback: F, layer: L) -> &mut Self
+    where
+        P: FromParams,
+        R: IntoResponse,
+        F: Method<Arc<S>, P, R> + Clone + Send + Sync + 'static,
+        L: Layer<MethodHandler<P, R, E>>,
+        L::Service: Service<Request, Response = Option<Response>, Error = E> + Send + 'static,
+        <L::Service as Service<Request>>::Future: Send + 'static,
+    {
+        let server = &self.server;
+        self.methods.entry(name).or_insert_with(|| {
+            let server = server.clone();
+            let handler = MethodHandler::new(move |params| {
+                let callback = callback.clone();
+                let server = server.clone();
+                async move { callback.invoke(server, params).await }
+            });
+
+            BoxService::new(layer.layer(handler))
+        });
+
+        self
+    }
 }
 
 impl<S: Debug, E> Debug for Router<S, E> {
