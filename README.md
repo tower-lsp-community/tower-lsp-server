@@ -110,6 +110,7 @@ You can use enable proposed features in the [LSP Specification version 3.18](htt
 - [Turborepo](https://github.com/vercel/turborepo/tree/main/crates/turborepo-lsp) (still uses the original project)
 - [Veryl](https://github.com/veryl-lang/veryl)
 - [django-language-server](https://github.com/joshuadavidthomas/django-language-server)
+- [SystemD-LSP](https://github.com/JFryy/systemd-lsp)
 
 # Ecosystem
 
