@@ -93,7 +93,12 @@ const ASCII_SET: AsciiSet =
 
 impl UriExt for lsp_types::Uri {
     fn to_file_path(&self) -> Option<Cow<Path>> {
-        let path = match self.path().as_estr().decode().into_string_lossy() {
+        let path_str = self.path().as_estr().decode().into_string_lossy();
+        if path_str.is_empty() {
+            return None;
+        }
+
+        let path = match path_str {
             Cow::Borrowed(ref_) => Cow::Borrowed(Path::new(ref_)),
             Cow::Owned(owned) => Cow::Owned(PathBuf::from(owned)),
         };
