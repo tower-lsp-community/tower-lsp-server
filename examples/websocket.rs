@@ -1,7 +1,6 @@
 //! Shows how to serve a language server of websockets.
 
 use async_tungstenite::{ByteReader, ByteWriter, tokio::accept_async};
-use futures::StreamExt;
 use tokio::net::TcpListener;
 use tower_lsp_server::{LspService, Server};
 use tracing::info;

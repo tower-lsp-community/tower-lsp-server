@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.22.1] - 2025-08-05
+
+### Added
+
+- add systemd-lsp to projects section (#59)
+- add biome and oxc to projects section (#60)
+
+### Changed
+
+- `UriExt::to_file_path` do not panic on invalid/empty uri (#61)
 
 ## [0.22.0] - 2025-04-07
 
