@@ -104,6 +104,8 @@ You can use enable proposed features in the [LSP Specification version 3.18](htt
 
 # Projects using `tower-lsp-server`
 
+- [Biome](https://github.com/biomejs/biome)
+- [Oxc](https://github.com/oxc-project/oxc)
 - [Harper](https://github.com/Automattic/harper)
 - [Polarity](https://github.com/polarity-lang/polarity/): both for their language server and their [interactive web demo](https://polarity-lang.github.io).
 - [Deno](https://github.com/denoland/deno/tree/main/cli/lsp) (still uses the original project)
