@@ -109,7 +109,7 @@ impl UriExt for lsp_types::Uri {
                 // in which case the path will include a leading slash we
                 // need to remove to get `c:/...`
                 let host = path.to_string_lossy();
-                let host = &host[1..];
+                let host = host.get(1..)?;
                 return Some(Cow::Owned(PathBuf::from(host)));
             }
 
@@ -170,6 +170,7 @@ mod tests {
     use crate::UriExt;
     use lsp_types::Uri;
     use std::path::{Path, PathBuf};
+    use std::str::FromStr;
 
     fn with_schema(path: &str) -> String {
         const EXPECTED_SCHEMA: &str = if cfg!(windows) { "file:///" } else { "file://" };
@@ -305,5 +306,12 @@ mod tests {
             let uri = Uri::from_file_path(path).unwrap();
             assert_eq!(uri.to_string(), expected);
         }
+    }
+
+    #[test]
+    fn test_invalid_uri_on_windows() {
+        let uri = Uri::from_str("file://").unwrap();
+        let path = uri.to_file_path();
+        assert!(path.is_none());
     }
 }
