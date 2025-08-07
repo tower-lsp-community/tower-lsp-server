@@ -5,9 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+<!-- Don't forget to update the links at the end -->
+
 ## [Unreleased]
 
+[Unreleased]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.22.1...HEAD
+
 ## [0.22.1] - 2025-08-05
+
+[0.22.1]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.22.0...v0.22.1
 
 ### Added
 
@@ -19,6 +25,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `UriExt::to_file_path` do not panic on invalid/empty uri (#61)
 
 ## [0.22.0] - 2025-04-07
+
+[0.22.0]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.21.1...v0.22.0
 
 ### Changed
 
@@ -32,6 +40,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.21.1] - 2025-04-07
 
+[0.21.1]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.21.0...v0.21.1
+
 ### Added
 
 * Export `UriExt` to reduce development friction (#38)
@@ -42,6 +52,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Allow `null` param in JSON-RPC response when it should be None (#41)
 
 ## [0.21.0] - 2025-03-16
+
+[0.21.0]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.20.0...v0.21.0
 
 ### Added
 
@@ -643,7 +655,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * `textDocument/hover`
   * `textDocument/documentHighlight`
 
-[Unreleased]: https://github.com/ebkalderon/tower-lsp/compare/v0.20.0...HEAD
 [0.20.0]: https://github.com/ebkalderon/tower-lsp/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/ebkalderon/tower-lsp/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/ebkalderon/tower-lsp/compare/v0.17.0...v0.18.0
