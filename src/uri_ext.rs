@@ -69,7 +69,7 @@ pub trait UriExt: Sized + sealed::Sealed {
     /// responsibility to check the URL’s scheme before calling this.
     ///
     /// e.g. `Uri("file:///etc/passwd")` becomes `PathBuf("/etc/passwd")`
-    fn to_file_path(&self) -> Option<Cow<Path>>;
+    fn to_file_path(&self) -> Option<Cow<'_, Path>>;
 
     /// Convert a file path to a [`lsp_types::Uri`].
     ///
@@ -92,7 +92,7 @@ const ASCII_SET: AsciiSet =
         .remove(b'/');
 
 impl UriExt for lsp_types::Uri {
-    fn to_file_path(&self) -> Option<Cow<Path>> {
+    fn to_file_path(&self) -> Option<Cow<'_, Path>> {
         let path_str = self.path().as_estr().decode().into_string_lossy();
         if path_str.is_empty() {
             return None;
