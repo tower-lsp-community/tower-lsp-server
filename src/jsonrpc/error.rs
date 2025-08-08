@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 use std::fmt::{self, Display, Formatter};
 
-use lsp_types::LSPAny;
+use ls_types::LSPAny;
 use serde::{Deserialize, Serialize};
 
 /// A specialized [`Result`] error type for JSON-RPC handlers.

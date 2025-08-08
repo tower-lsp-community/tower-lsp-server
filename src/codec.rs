@@ -250,10 +250,10 @@ fn decode_headers(headers: &[httparse::Header<'_>]) -> Result<usize, ParseError>
 
 #[cfg(test)]
 mod tests {
-    use bytes::BytesMut;
-    use lsp_types::LSPAny;
-
     use super::*;
+
+    use bytes::BytesMut;
+    use ls_types::LSPAny;
 
     macro_rules! assert_err {
         ($expression:expr, $($pattern:tt)+) => {

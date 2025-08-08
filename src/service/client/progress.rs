@@ -3,9 +3,9 @@
 use std::fmt::{self, Debug, Formatter};
 use std::marker::PhantomData;
 
-use lsp_types::{
+use ls_types::{
     ProgressParams, ProgressParamsValue, ProgressToken, WorkDoneProgress, WorkDoneProgressBegin,
-    WorkDoneProgressReport, notification::Progress as ProgressNotification,
+    WorkDoneProgressEnd, WorkDoneProgressReport, notification::Progress as ProgressNotification,
 };
 
 use super::Client;
@@ -349,9 +349,9 @@ impl<B, C> OngoingProgress<B, C> {
         self.client
             .send_notification::<ProgressNotification>(ProgressParams {
                 token: self.token,
-                value: ProgressParamsValue::WorkDone(WorkDoneProgress::End(
-                    lsp_types::WorkDoneProgressEnd { message },
-                )),
+                value: ProgressParamsValue::WorkDone(WorkDoneProgress::End(WorkDoneProgressEnd {
+                    message,
+                })),
             })
             .await;
     }

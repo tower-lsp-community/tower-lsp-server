@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
 use std::str::FromStr;
 
-use lsp_types::LSPAny;
+use ls_types::LSPAny;
 use serde::{Deserialize, Serialize};
 
 use super::{Error, Id, Result, Version};

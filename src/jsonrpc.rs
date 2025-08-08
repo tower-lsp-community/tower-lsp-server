@@ -10,7 +10,7 @@ pub use self::router::{FromParams, IntoResponse, Method};
 use std::borrow::Cow;
 use std::fmt::{self, Debug, Display, Formatter};
 
-use lsp_types::NumberOrString;
+use ls_types::NumberOrString;
 use serde::de::{self, Deserializer};
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};

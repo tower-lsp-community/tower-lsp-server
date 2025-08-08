@@ -1,8 +1,10 @@
-use lsp_types::request::{
-    GotoDeclarationParams, GotoDeclarationResponse, GotoImplementationParams,
-    GotoImplementationResponse, GotoTypeDefinitionParams, GotoTypeDefinitionResponse,
+use ls_types::{
+    request::{
+        GotoDeclarationParams, GotoDeclarationResponse, GotoImplementationParams,
+        GotoImplementationResponse, GotoTypeDefinitionParams, GotoTypeDefinitionResponse,
+    },
+    *,
 };
-use lsp_types::*;
 use tracing::{error, warn};
 
 use crate::jsonrpc::{Error, Result};
@@ -36,7 +38,7 @@ macro_rules! rpc {
         pub mod generated {
             use crate::jsonrpc::Router;
             use crate::service::{layers, Client, Pending, ServerState, ExitedError};
-            use lsp_types::*;
+            use ls_types::*;
             use std::sync::Arc;
             use super::LanguageServer;
 
@@ -304,7 +306,7 @@ rpc! {
         ///
         /// This request was introduced in specification version 3.14.0.
         ///
-        /// The [`GotoDeclarationResponse::Link`](lsp_types::GotoDefinitionResponse::Link) return value
+        /// The [`GotoDeclarationResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link) return value
         /// was introduced in specification version 3.14.0 and requires client-side support in order to
         /// be used. It can be returned if the client set the following field to `true` in the
         /// [`initialize`](Self::initialize) method:
@@ -329,7 +331,7 @@ rpc! {
         ///
         /// # Compatibility
         ///
-        /// The [`GotoDefinitionResponse::Link`](lsp_types::GotoDefinitionResponse::Link) return value
+        /// The [`GotoDefinitionResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link) return value
         /// was introduced in specification version 3.14.0 and requires client-side support in order to
         /// be used. It can be returned if the client set the following field to `true` in the
         /// [`initialize`](Self::initialize) method:
@@ -356,7 +358,7 @@ rpc! {
         ///
         /// This request was introduced in specification version 3.6.0.
         ///
-        /// The [`GotoTypeDefinitionResponse::Link`](lsp_types::GotoDefinitionResponse::Link) return
+        /// The [`GotoTypeDefinitionResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link) return
         /// value was introduced in specification version 3.14.0 and requires client-side support in
         /// order to be used. It can be returned if the client set the following field to `true` in the
         /// [`initialize`](Self::initialize) method:
@@ -383,7 +385,7 @@ rpc! {
         ///
         /// This request was introduced in specification version 3.6.0.
         ///
-        /// The [`GotoImplementationResponse::Link`](lsp_types::GotoDefinitionResponse::Link)
+        /// The [`GotoImplementationResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link)
         /// return value was introduced in specification version 3.14.0 and requires client-side
         /// support in order to be used. It can be returned if the client set the following field to
         /// `true` in the [`initialize`](Self::initialize) method:

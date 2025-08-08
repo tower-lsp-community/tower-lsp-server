@@ -58,7 +58,7 @@ mod sealed {
     pub trait Sealed {}
 }
 
-/// Provide methods to [`lsp_types::Uri`] to fill blanks left by
+/// Provide methods to [`ls_types::Uri`] to fill blanks left by
 /// `fluent_uri` (the underlying type) especially when converting to and from file paths.
 pub trait UriExt: Sized + sealed::Sealed {
     /// Assuming the URL is in the `file` scheme or similar,
@@ -71,15 +71,15 @@ pub trait UriExt: Sized + sealed::Sealed {
     /// e.g. `Uri("file:///etc/passwd")` becomes `PathBuf("/etc/passwd")`
     fn to_file_path(&self) -> Option<Cow<'_, Path>>;
 
-    /// Convert a file path to a [`lsp_types::Uri`].
+    /// Convert a file path to a [`ls_types::Uri`].
     ///
-    /// Create a [`lsp_types::Uri`] from a file path.
+    /// Create a [`ls_types::Uri`] from a file path.
     ///
     /// Returns `None` if the file does not exist.
     fn from_file_path<A: AsRef<Path>>(path: A) -> Option<Self>;
 }
 
-impl sealed::Sealed for lsp_types::Uri {}
+impl sealed::Sealed for ls_types::Uri {}
 
 const ASCII_SET: AsciiSet =
     // RFC3986 allows only alphanumeric characters, `-`, `.`, `_`, and `~` in the path.
@@ -91,9 +91,9 @@ const ASCII_SET: AsciiSet =
         // we do not want path separators to be percent-encoded
         .remove(b'/');
 
-impl UriExt for lsp_types::Uri {
+impl UriExt for ls_types::Uri {
     fn to_file_path(&self) -> Option<Cow<'_, Path>> {
-        let path_str = self.path().as_estr().decode().into_string_lossy();
+        let path_str = self.path().decode().into_string_lossy();
         if path_str.is_empty() {
             return None;
         }
@@ -104,10 +104,7 @@ impl UriExt for lsp_types::Uri {
         };
 
         if cfg!(windows) {
-            let auth_host = self
-                .authority()
-                .map(|auth| auth.host().as_str())
-                .unwrap_or_default();
+            let auth_host = self.authority().map(|auth| auth.host()).unwrap_or_default();
 
             if auth_host.is_empty() {
                 // very high chance this is a `file:///c:/...` uri
@@ -173,7 +170,7 @@ impl UriExt for lsp_types::Uri {
 mod tests {
     use super::strict_canonicalize;
     use crate::UriExt;
-    use lsp_types::Uri;
+    use ls_types::Uri;
     use std::path::{Path, PathBuf};
     use std::str::FromStr;
 
