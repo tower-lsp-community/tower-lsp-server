@@ -6,7 +6,7 @@
 //!
 //! ```rust
 //! use tower_lsp_server::jsonrpc::Result;
-//! use tower_lsp_server::lsp_types::*;
+//! use tower_lsp_server::ls_types::prelude::*;
 //! use tower_lsp_server::{Client, LanguageServer, LspService, Server};
 //!
 //! #[derive(Debug)]
@@ -73,7 +73,7 @@
 //! ```
 
 /// A re-export of [`lsp-types`](https://docs.rs/lsp-types) for convenience.
-pub use lsp_types;
+pub use ls_types;
 
 pub use self::server::LanguageServer;
 pub use self::service::progress::{

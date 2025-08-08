@@ -1,6 +1,6 @@
 //! Common language server used in the examples
 
-use tower_lsp_server::{Client, LanguageServer, jsonrpc::Result, lsp_types::*};
+use tower_lsp_server::{Client, LanguageServer, jsonrpc::Result, ls_types::prelude::*};
 
 #[derive(Debug)]
 pub struct Backend {

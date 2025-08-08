@@ -9,7 +9,7 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use futures::future::{self, BoxFuture, FutureExt};
-use lsp_types::LSPAny;
+use ls_types::lsp::LSPAny;
 use serde::{Serialize, de::DeserializeOwned};
 use tower::{Layer, Service, util::BoxService};
 
