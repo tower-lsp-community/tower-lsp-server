@@ -41,9 +41,9 @@ dependencies = [
 
 [[package]]
 name = "async-tungstenite"
-version = "0.30.0"
+version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e308e9866b891743e3fdf9dfd6b57f85c5062ca01ce4fed6f393e76eb5accea4"
+checksum = "ee88b4c88ac8c9ea446ad43498955750a4bbe64c4392f21ccfe5d952865e318f"
 dependencies = [
  "atomic-waker",
  "futures-core",
@@ -363,10 +363,11 @@ checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 [[package]]
 name = "ls-types"
 version = "0.1.0"
-source = "git+https://github.com/tower-lsp-community/ls-types?branch=main#3fbb1cf8422abeba41dc7b7b136e12490742e5d2"
+source = "git+https://github.com/tower-lsp-community/ls-types?branch=main#0f98962aee52ae79f81536cfab28596108e1295e"
 dependencies = [
  "bitflags",
  "fluent-uri",
+ "percent-encoding",
  "serde",
  "serde_json",
 ]
@@ -470,9 +471,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.95"
+version = "1.0.96"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02b3e5e68a3a1a02aad3ec490a98007cbc13c37cbe84a3cd7b8e406d76e7f778"
+checksum = "beef09f85ae72cea1ef96ba6870c51e6382ebfa4f0e85b643459331f3daa5be0"
 dependencies = [
  "unicode-ident",
 ]
@@ -622,9 +623,9 @@ dependencies = [
 
 [[package]]
 name = "slab"
-version = "0.4.10"
+version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04dc19736151f35336d325007ac991178d504a119863a2fcb3758cdb5e52c50d"
+checksum = "7a2ae44ef20feb57a68b23d846850f861394c2e02dc425a50098ae8c90267589"
 
 [[package]]
 name = "smallvec"
