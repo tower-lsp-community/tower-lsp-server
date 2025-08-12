@@ -1220,7 +1220,7 @@ rpc! {
         async fn symbol(
             &self,
             params: WorkspaceSymbolParams,
-        ) -> Result<Option<OneOf<Vec<SymbolInformation>, Vec<WorkspaceSymbol>>>> {
+        ) -> Result<Option<WorkspaceSymbolResponse>> {
             let _ = params;
             error!("got a `workspace/symbol` request, but it is not implemented");
             Err(Error::method_not_found())
