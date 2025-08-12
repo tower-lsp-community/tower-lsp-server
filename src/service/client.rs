@@ -411,6 +411,32 @@ impl Client {
         .await;
     }
 
+    /// Creates a work done progress for the given token. Per the spec, the server must not send
+    /// any progress notifications to the given token if an error occurs in this request.
+    ///
+    /// This corresponds to the [`window/workDoneProgress/create`] request.
+    ///
+    /// [`window/workDoneProgress/create`]: https://microsoft.github.io/language-server-protocol/specification#window_workDoneProgress_create
+    ///
+    /// # Initialization
+    ///
+    /// If the request is sent to the client before the server has been initialized, this will
+    /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
+    ///
+    /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Compatibility
+    ///
+    /// This request was introduced in specification version 3.15.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
+    pub async fn create_work_done_progress(&self, token: ProgressToken) -> jsonrpc::Result<()> {
+        self.send_request::<request::WorkDoneProgressCreate>(WorkDoneProgressCreateParams { token })
+            .await
+    }
+
     // Workspace Features
 
     /// Fetches configuration settings from the client.
