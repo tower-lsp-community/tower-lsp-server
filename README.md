@@ -113,6 +113,7 @@ You can use enable proposed features in the [LSP Specification version 3.18](htt
 - [Veryl](https://github.com/veryl-lang/veryl)
 - [django-language-server](https://github.com/joshuadavidthomas/django-language-server)
 - [SystemD-LSP](https://github.com/JFryy/systemd-lsp)
+- [Amber LSP](https://github.com/amber-lang/amber-lsp)
 
 # Ecosystem
 
