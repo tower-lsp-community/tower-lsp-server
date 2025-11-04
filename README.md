@@ -3,6 +3,7 @@
 [![CI][ci-badge]][ci-url]
 [![Crates.io][crates-badge]][crates-url]
 [![Documentation][docs-badge]][docs-url]
+[![Matrix room at #tower-lsp:wiro.world][matrix-badge]][matrix-url]
 
 [ci-badge]: https://github.com/tower-lsp-community/tower-lsp-server/actions/workflows/rust.yml/badge.svg?branch=main
 [ci-url]: https://github.com/tower-lsp-community/tower-lsp-server/actions
@@ -10,6 +11,8 @@
 [crates-url]: https://crates.io/crates/tower-lsp-server
 [docs-badge]: https://docs.rs/tower-lsp-server/badge.svg
 [docs-url]: https://docs.rs/tower-lsp-server
+[matrix-badge]: https://img.shields.io/badge/Matrix-%23tower--lsp%3Awiro.world-white?logo=matrix
+[matrix-url]: https://matrix.to/#/#tower-lsp:wiro.world
 
 *A community fork of [tower-lsp](https://github.com/ebkalderon/tower-lsp)*
 
