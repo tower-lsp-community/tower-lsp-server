@@ -26,8 +26,7 @@ bytes = "1"
 dashmap = "6"
 futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
 httparse = "1"
-# ls-types = "0.1"
-ls-types = { git = "https://github.com/tower-lsp-community/ls-types", branch = "main" }
+ls-types = "0.0"
 memchr = "2"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
@@ -35,10 +34,9 @@ tokio-util = { version = "0.7", optional = true, features = ["codec"] }
 tokio = { version = "1", optional = true }
 tower = { version = "0.5", default-features = false, features = ["util"] }
 tracing = "0.1"
-percent-encoding = "2.3.1"
 
 [dev-dependencies]
-async-tungstenite = { version = "0.31", features = ["tokio-runtime"] }
+async-tungstenite = { version = "0.32", features = ["tokio-runtime"] }
 tokio-util = { version = "0.7", features = ["compat"] }
 tokio = { version = "1", features = ["io-util", "io-std", "macros", "rt-multi-thread", "time"] }
 tracing-subscriber = "0.3"
