@@ -118,6 +118,7 @@ You can use enable proposed features in the [LSP Specification version 3.18](htt
 - [pytest-language-server](https://github.com/bellini666/pytest-language-server)
 - [SystemD-LSP](https://github.com/JFryy/systemd-lsp)
 - [Amber LSP](https://github.com/amber-lang/amber-lsp)
+- [ast-grep](https://github.com/ast-grep/ast-grep)
 
 # Ecosystem
 
