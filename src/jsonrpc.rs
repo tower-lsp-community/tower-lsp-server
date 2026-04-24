@@ -10,7 +10,6 @@ pub use self::router::{FromParams, IntoResponse, Method};
 use std::borrow::Cow;
 use std::fmt::{self, Debug, Display, Formatter};
 
-use ls_types::NumberOrString;
 use serde::de::{self, Deserializer};
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
@@ -66,11 +65,11 @@ impl From<String> for Id {
     }
 }
 
-impl From<NumberOrString> for Id {
-    fn from(num_or_str: NumberOrString) -> Self {
+impl From<ls_types::Id> for Id {
+    fn from(num_or_str: ls_types::Id) -> Self {
         match num_or_str {
-            NumberOrString::Number(num) => Self::Number(i64::from(num)),
-            NumberOrString::String(s) => Self::String(s),
+            ls_types::Id::Int(num) => Self::Number(i64::from(num)),
+            ls_types::Id::String(s) => Self::String(s),
         }
     }
 }
