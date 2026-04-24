@@ -25,7 +25,7 @@ dashmap = "6"
 futures-util = { version = "0.3", default-features = false, features = [ "std", "async-await", "io", "async-await-macro", "sink" ] }
 futures-channel = { version = "0.3", features = ["sink"] }
 httparse = "1"
-ls-types = "0.0.6"
+ls-types = { package = "gen-lsp-types", version = "0.10", features = ["fluent-uri"] }
 memchr = "2"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
