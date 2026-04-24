@@ -10,7 +10,7 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use futures::future::{self, BoxFuture, FutureExt};
-use ls_types::LSPAny;
+use ls_types::LspAny;
 use tower::Service;
 
 use crate::LanguageServer;
@@ -127,7 +127,7 @@ impl<S: LanguageServer> Service<Request> for LspService<S> {
             match response.as_ref().and_then(|res| res.error()) {
                 Some(Error {
                     code: ErrorCode::MethodNotFound,
-                    data: Some(LSPAny::String(m)),
+                    data: Some(LspAny::String(m)),
                     ..
                 }) if m.starts_with("$/") => Ok(None),
                 _ => Ok(response),
@@ -250,7 +250,7 @@ impl<S: Debug> Debug for LspServiceBuilder<S> {
 
 #[cfg(test)]
 mod tests {
-    use ls_types::*;
+    use ls_types::{CodeAction, InitializeParams, InitializeResult};
     use serde_json::json;
     use tower::ServiceExt;
 

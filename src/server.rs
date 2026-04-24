@@ -1,10 +1,4 @@
-use ls_types::{
-    request::{
-        GotoDeclarationParams, GotoDeclarationResponse, GotoImplementationParams,
-        GotoImplementationResponse, GotoTypeDefinitionParams, GotoTypeDefinitionResponse,
-    },
-    *,
-};
+use ls_types::*;
 use tracing::{error, warn};
 
 use crate::jsonrpc::{Error, Result};
@@ -317,8 +311,8 @@ rpc! {
         #[rpc(name = "textDocument/declaration")]
         async fn goto_declaration(
             &self,
-            params: GotoDeclarationParams,
-        ) -> Result<Option<GotoDeclarationResponse>> {
+            params: DeclarationParams,
+        ) -> Result<Option<DeclarationResponse>> {
             let _ = params;
             error!("got a `textDocument/declaration` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -342,8 +336,8 @@ rpc! {
         #[rpc(name = "textDocument/definition")]
         async fn goto_definition(
             &self,
-            params: GotoDefinitionParams,
-        ) -> Result<Option<GotoDefinitionResponse>> {
+            params: DefinitionParams,
+        ) -> Result<Option<DefinitionResponse>> {
             let _ = params;
             error!("got a `textDocument/definition` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -369,8 +363,8 @@ rpc! {
         #[rpc(name = "textDocument/typeDefinition")]
         async fn goto_type_definition(
             &self,
-            params: GotoTypeDefinitionParams,
-        ) -> Result<Option<GotoTypeDefinitionResponse>> {
+            params: TypeDefinitionParams,
+        ) -> Result<Option<TypeDefinitionResponse>> {
             let _ = params;
             error!("got a `textDocument/typeDefinition` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -396,8 +390,8 @@ rpc! {
         #[rpc(name = "textDocument/implementation")]
         async fn goto_implementation(
             &self,
-            params: GotoImplementationParams,
-        ) -> Result<Option<GotoImplementationResponse>> {
+            params: ImplementationParams,
+        ) -> Result<Option<ImplementationResponse>> {
             let _ = params;
             error!("got a `textDocument/implementation` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -726,7 +720,7 @@ rpc! {
         async fn semantic_tokens_full(
             &self,
             params: SemanticTokensParams,
-        ) -> Result<Option<SemanticTokensResult>> {
+        ) -> Result<Option<SemanticTokens>> {
             let _ = params;
             error!("got a `textDocument/semanticTokens/full` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -747,7 +741,7 @@ rpc! {
         async fn semantic_tokens_full_delta(
             &self,
             params: SemanticTokensDeltaParams,
-        ) -> Result<Option<SemanticTokensFullDeltaResult>> {
+        ) -> Result<Option<SemanticTokensDeltaResponse>> {
             let _ = params;
             error!("got a `textDocument/semanticTokens/full/delta` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -773,7 +767,7 @@ rpc! {
         async fn semantic_tokens_range(
             &self,
             params: SemanticTokensRangeParams,
-        ) -> Result<Option<SemanticTokensRangeResult>> {
+        ) -> Result<Option<SemanticTokens>> {
             let _ = params;
             error!("got a `textDocument/semanticTokens/range` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -924,7 +918,7 @@ rpc! {
         async fn diagnostic(
             &self,
             params: DocumentDiagnosticParams,
-        ) -> Result<DocumentDiagnosticReportResult> {
+        ) -> Result<DocumentDiagnosticReport> {
             let _ = params;
             error!("got a `textDocument/diagnostic` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -962,7 +956,7 @@ rpc! {
         async fn workspace_diagnostic(
             &self,
             params: WorkspaceDiagnosticParams,
-        ) -> Result<WorkspaceDiagnosticReportResult> {
+        ) -> Result<WorkspaceDiagnosticReport> {
             let _ = params;
             error!("got a `workspace/diagnostic` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -1167,7 +1161,7 @@ rpc! {
         async fn prepare_rename(
             &self,
             params: TextDocumentPositionParams,
-        ) -> Result<Option<PrepareRenameResponse>> {
+        ) -> Result<Option<PrepareRenameResult>> {
             let _ = params;
             error!("got a `textDocument/prepareRename` request, but it is not implemented");
             Err(Error::method_not_found())
@@ -1385,7 +1379,7 @@ rpc! {
         /// In most cases, the server creates a [`WorkspaceEdit`] structure and applies the changes to
         /// the workspace using `Client::apply_edit()` before returning from this function.
         #[rpc(name = "workspace/executeCommand")]
-        async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<LSPAny>> {
+        async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<LspAny>> {
             let _ = params;
             error!("got a `workspace/executeCommand` request, but it is not implemented");
             Err(Error::method_not_found())

@@ -122,6 +122,7 @@ where
             .map(|res| Ok(Message::Response(res)))
             .forward(responses_tx.clone());
 
+        #[allow(clippy::needless_continue)]
         let print_output = stream_select!(responses_rx, client_requests.map(Message::Request))
             .map(Ok)
             .forward(framed_stdout);

@@ -16,7 +16,7 @@ use futures::{
     future::BoxFuture,
     sink::SinkExt,
 };
-use ls_types::{notification, request, *};
+use ls_types::*;
 use serde::Serialize;
 use tower::Service;
 use tracing::{error, trace};
@@ -104,7 +104,7 @@ impl Client {
         &self,
         registrations: Vec<Registration>,
     ) -> jsonrpc::Result<()> {
-        self.send_request::<request::RegisterCapability>(RegistrationParams { registrations })
+        self.send_request::<RegistrationRequest>(RegistrationParams { registrations })
             .await
     }
 
@@ -128,10 +128,8 @@ impl Client {
         &self,
         unregisterations: Vec<Unregistration>,
     ) -> jsonrpc::Result<()> {
-        self.send_request::<request::UnregisterCapability>(UnregistrationParams {
-            unregisterations,
-        })
-        .await
+        self.send_request::<UnregistrationRequest>(UnregistrationParams { unregisterations })
+            .await
     }
 
     // Window Features
@@ -141,9 +139,9 @@ impl Client {
     /// This corresponds to the [`window/showMessage`] notification.
     ///
     /// [`window/showMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessage
-    pub async fn show_message<M: Display>(&self, typ: MessageType, message: M) {
-        self.send_notification_unchecked::<notification::ShowMessage>(ShowMessageParams {
-            typ,
+    pub async fn show_message<M: Display>(&self, kind: MessageType, message: M) {
+        self.send_notification_unchecked::<ShowMessageNotification>(ShowMessageParams {
+            kind,
             message: message.to_string(),
         })
         .await;
@@ -163,12 +161,12 @@ impl Client {
     /// - The request to the client fails
     pub async fn show_message_request<M: Display>(
         &self,
-        typ: MessageType,
+        kind: MessageType,
         message: M,
         actions: Option<Vec<MessageActionItem>>,
     ) -> jsonrpc::Result<Option<MessageActionItem>> {
-        self.send_request_unchecked::<request::ShowMessageRequest>(ShowMessageRequestParams {
-            typ,
+        self.send_request_unchecked::<ShowMessageRequest>(ShowMessageRequestParams {
+            kind,
             message: message.to_string(),
             actions,
         })
@@ -180,9 +178,9 @@ impl Client {
     /// This corresponds to the [`window/logMessage`] notification.
     ///
     /// [`window/logMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_logMessage
-    pub async fn log_message<M: Display>(&self, typ: MessageType, message: M) {
-        self.send_notification_unchecked::<notification::LogMessage>(LogMessageParams {
-            typ,
+    pub async fn log_message<M: Display>(&self, kind: MessageType, message: M) {
+        self.send_notification_unchecked::<LogMessageNotification>(LogMessageParams {
+            kind,
             message: message.to_string(),
         })
         .await;
@@ -211,7 +209,7 @@ impl Client {
     ///
     /// - The request to the client fails
     pub async fn show_document(&self, params: ShowDocumentParams) -> jsonrpc::Result<bool> {
-        self.send_request::<request::ShowDocument>(params)
+        self.send_request::<ShowDocumentRequest>(params)
             .await
             .map(|res| res.success)
     }
@@ -229,11 +227,10 @@ impl Client {
             Err(e) => error!("invalid JSON in `telemetry/event` notification: {}", e),
             Ok(value) => {
                 let value = match value {
-                    LSPAny::Object(value) => OneOf::Left(value),
-                    LSPAny::Array(value) => OneOf::Right(value),
-                    value => OneOf::Right(vec![value]),
+                    LspAny::Object(_) | LspAny::Array(_) => value,
+                    v => LspAny::Array(vec![v]),
                 };
-                self.send_notification_unchecked::<notification::TelemetryEvent>(value)
+                self.send_notification_unchecked::<TelemetryEventNotification>(value)
                     .await;
             }
         }
@@ -267,8 +264,7 @@ impl Client {
     ///
     /// - The request to the client fails
     pub async fn code_lens_refresh(&self) -> jsonrpc::Result<()> {
-        self.send_request::<ls_types::request::CodeLensRefresh>(())
-            .await
+        self.send_request::<CodeLensRefreshRequest>(()).await
     }
 
     /// Asks the client to refresh the editors for which this server provides semantic tokens. As a
@@ -298,8 +294,7 @@ impl Client {
     ///
     /// - The request to the client fails
     pub async fn semantic_tokens_refresh(&self) -> jsonrpc::Result<()> {
-        self.send_request::<ls_types::request::SemanticTokensRefresh>(())
-            .await
+        self.send_request::<SemanticTokensRefreshRequest>(()).await
     }
 
     /// Asks the client to refresh the inline values currently shown in editors. As a result, the
@@ -328,8 +323,7 @@ impl Client {
     ///
     /// - The request to the client fails
     pub async fn inline_value_refresh(&self) -> jsonrpc::Result<()> {
-        self.send_request::<request::InlineValueRefreshRequest>(())
-            .await
+        self.send_request::<InlineValueRefreshRequest>(()).await
     }
 
     /// Asks the client to refresh the inlay hints currently shown in editors. As a result, the
@@ -358,8 +352,7 @@ impl Client {
     ///
     /// - The request to the client fails
     pub async fn inlay_hint_refresh(&self) -> jsonrpc::Result<()> {
-        self.send_request::<request::InlayHintRefreshRequest>(())
-            .await
+        self.send_request::<InlayHintRefreshRequest>(()).await
     }
 
     /// Asks the client to refresh all needed document and workspace diagnostics.
@@ -386,8 +379,7 @@ impl Client {
     ///
     /// - The request to the client fails
     pub async fn workspace_diagnostic_refresh(&self) -> jsonrpc::Result<()> {
-        self.send_request::<request::WorkspaceDiagnosticRefresh>(())
-            .await
+        self.send_request::<DiagnosticRefreshRequest>(()).await
     }
 
     /// Submits validation diagnostics for an open file with the given URI.
@@ -405,8 +397,8 @@ impl Client {
         diags: Vec<Diagnostic>,
         version: Option<i32>,
     ) {
-        self.send_notification::<notification::PublishDiagnostics>(PublishDiagnosticsParams::new(
-            uri, diags, version,
+        self.send_notification::<PublishDiagnosticsNotification>(PublishDiagnosticsParams::new(
+            uri, version, diags,
         ))
         .await;
     }
@@ -433,7 +425,7 @@ impl Client {
     ///
     /// - The request to the client fails
     pub async fn create_work_done_progress(&self, token: ProgressToken) -> jsonrpc::Result<()> {
-        self.send_request::<request::WorkDoneProgressCreate>(WorkDoneProgressCreateParams { token })
+        self.send_request::<WorkDoneProgressCreateRequest>(WorkDoneProgressCreateParams { token })
             .await
     }
 
@@ -467,8 +459,8 @@ impl Client {
     pub async fn configuration(
         &self,
         items: Vec<ConfigurationItem>,
-    ) -> jsonrpc::Result<Vec<LSPAny>> {
-        self.send_request::<request::WorkspaceConfiguration>(ConfigurationParams { items })
+    ) -> jsonrpc::Result<Vec<LspAny>> {
+        self.send_request::<ConfigurationRequest>(ConfigurationParams { items })
             .await
     }
 
@@ -496,8 +488,7 @@ impl Client {
     ///
     /// - The request to the client fails
     pub async fn workspace_folders(&self) -> jsonrpc::Result<Option<Vec<WorkspaceFolder>>> {
-        self.send_request::<request::WorkspaceFoldersRequest>(())
-            .await
+        self.send_request::<WorkspaceFoldersRequest>(()).await
     }
 
     /// Requests a workspace resource be edited on the client side and returns whether the edit was
@@ -520,10 +511,11 @@ impl Client {
     pub async fn apply_edit(
         &self,
         edit: WorkspaceEdit,
-    ) -> jsonrpc::Result<ApplyWorkspaceEditResponse> {
-        self.send_request::<request::ApplyWorkspaceEdit>(ApplyWorkspaceEditParams {
+    ) -> jsonrpc::Result<ApplyWorkspaceEditResult> {
+        self.send_request::<ApplyWorkspaceEditRequest>(ApplyWorkspaceEditParams {
             edit,
             label: None,
+            metadata: None,
         })
         .await
     }
@@ -550,7 +542,7 @@ impl Client {
     /// #
     /// # impl Mock {
     /// # async fn completion(&self, params: CompletionParams) {
-    /// # let work_done_token = ProgressToken::Number(1);
+    /// # let work_done_token = ProgressToken::Int(1);
     /// #
     /// let progress = self
     ///     .client
@@ -583,7 +575,7 @@ impl Client {
     /// This notification will only be sent if the server is initialized.
     pub async fn send_notification<N>(&self, params: N::Params)
     where
-        N: notification::Notification,
+        N: Notification,
     {
         if let State::Initialized | State::ShutDown = self.inner.state.get() {
             self.send_notification_unchecked::<N>(params).await;
@@ -595,7 +587,7 @@ impl Client {
 
     async fn send_notification_unchecked<N>(&self, params: N::Params)
     where
-        N: notification::Notification,
+        N: Notification,
     {
         let request = Request::from_notification::<N>(params);
         if self.clone().call(request).await.is_err() {
@@ -618,7 +610,7 @@ impl Client {
     /// - The client returns an error
     pub async fn send_request<R>(&self, params: R::Params) -> jsonrpc::Result<R::Result>
     where
-        R: request::Request,
+        R: ls_types::Request,
     {
         if let State::Initialized | State::ShutDown = self.inner.state.get() {
             self.send_request_unchecked::<R>(params).await
@@ -632,7 +624,7 @@ impl Client {
 
     async fn send_request_unchecked<R>(&self, params: R::Params) -> jsonrpc::Result<R::Result>
     where
-        R: request::Request,
+        R: ls_types::Request,
     {
         let id = self.next_request_id();
         let request = Request::from_request::<R>(id, params);
@@ -710,7 +702,10 @@ mod tests {
     use std::future::Future;
 
     use futures::stream::StreamExt;
-    use ls_types::notification::{LogMessage, PublishDiagnostics, ShowMessage, TelemetryEvent};
+    use ls_types::{
+        LogMessageNotification, PublishDiagnosticsNotification, ShowMessageNotification,
+        TelemetryEventNotification,
+    };
     use serde_json::json;
 
     use super::*;
@@ -732,57 +727,59 @@ mod tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn log_message() {
-        let (typ, msg) = (MessageType::LOG, "foo bar".to_owned());
-        let expected = Request::from_notification::<LogMessage>(LogMessageParams {
-            typ,
+        let (kind, msg) = (MessageType::Log, "foo bar".to_owned());
+        let expected = Request::from_notification::<LogMessageNotification>(LogMessageParams {
+            kind,
             message: msg.clone(),
         });
 
-        assert_client_message(|p| async move { p.log_message(typ, msg).await }, expected).await;
+        assert_client_message(|p| async move { p.log_message(kind, msg).await }, expected).await;
     }
 
     #[tokio::test(flavor = "current_thread")]
     async fn show_message() {
-        let (typ, msg) = (MessageType::LOG, "foo bar".to_owned());
-        let expected = Request::from_notification::<ShowMessage>(ShowMessageParams {
-            typ,
+        let (kind, msg) = (MessageType::Log, "foo bar".to_owned());
+        let expected = Request::from_notification::<ShowMessageNotification>(ShowMessageParams {
+            kind,
             message: msg.clone(),
         });
 
-        assert_client_message(|p| async move { p.show_message(typ, msg).await }, expected).await;
+        assert_client_message(|p| async move { p.show_message(kind, msg).await }, expected).await;
     }
 
     #[tokio::test(flavor = "current_thread")]
     async fn telemetry_event() {
         let null = json!(null);
-        let value = OneOf::Right(vec![null.clone()]);
-        let expected = Request::from_notification::<TelemetryEvent>(value);
+        let expected = Request::from_notification::<TelemetryEventNotification>(
+            serde_json::to_value(vec![null.clone()]).unwrap(),
+        );
         assert_client_message(|p| async move { p.telemetry_event(null).await }, expected).await;
 
         let array = json!([1, 2, 3]);
-        let value = OneOf::Right(array.as_array().unwrap().to_owned());
-        let expected = Request::from_notification::<TelemetryEvent>(value);
+        let expected = Request::from_notification::<TelemetryEventNotification>(array.clone());
         assert_client_message(|p| async move { p.telemetry_event(array).await }, expected).await;
 
         let object = json!({});
-        let value = OneOf::Left(object.as_object().unwrap().to_owned());
-        let expected = Request::from_notification::<TelemetryEvent>(value);
+        let expected = Request::from_notification::<TelemetryEventNotification>(object.clone());
         assert_client_message(|p| async move { p.telemetry_event(object).await }, expected).await;
 
         let other = json!("hello");
-        let wrapped = LSPAny::Array(vec![other.clone()]);
-        let value = OneOf::Right(wrapped.as_array().unwrap().to_owned());
-        let expected = Request::from_notification::<TelemetryEvent>(value);
+        let wrapped = LspAny::Array(vec![other.clone()]);
+        let expected = Request::from_notification::<TelemetryEventNotification>(wrapped);
         assert_client_message(|p| async move { p.telemetry_event(other).await }, expected).await;
     }
 
     #[tokio::test(flavor = "current_thread")]
     async fn publish_diagnostics() {
         let uri: Uri = "file:///path/to/file".parse().unwrap();
-        let diagnostics = vec![Diagnostic::new_simple(Range::default(), "example".into())];
+        let diagnostics = vec![Diagnostic {
+            range: Range::default(),
+            message: "example".into(),
+            ..Default::default()
+        }];
 
-        let params = PublishDiagnosticsParams::new(uri.clone(), diagnostics.clone(), None);
-        let expected = Request::from_notification::<PublishDiagnostics>(params);
+        let params = PublishDiagnosticsParams::new(uri.clone(), None, diagnostics.clone());
+        let expected = Request::from_notification::<PublishDiagnosticsNotification>(params);
 
         assert_client_message(
             |p| async move { p.publish_diagnostics(uri, diagnostics, None).await },

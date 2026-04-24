@@ -18,7 +18,7 @@
 //!     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
 //!         Ok(InitializeResult {
 //!             capabilities: ServerCapabilities {
-//!                 hover_provider: Some(HoverProviderCapability::Simple(true)),
+//!                 hover_provider: Some(true.into()),
 //!                 completion_provider: Some(CompletionOptions::default()),
 //!                 ..Default::default()
 //!             },
@@ -28,7 +28,7 @@
 //!
 //!     async fn initialized(&self, _: InitializedParams) {
 //!         self.client
-//!             .log_message(MessageType::INFO, "server initialized!")
+//!             .log_message(MessageType::Info, "server initialized!")
 //!             .await;
 //!     }
 //!
@@ -37,17 +37,23 @@
 //!     }
 //!
 //!     async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
-//!         Ok(Some(CompletionResponse::Array(vec![
-//!             CompletionItem::new_simple("Hello".to_string(), "Some detail".to_string()),
-//!             CompletionItem::new_simple("Bye".to_string(), "More detail".to_string())
-//!         ])))
+//!         Ok(Some(vec![
+//!             CompletionItem {
+//!                 label: "Hello".to_string(),
+//!                 detail: Some("Some detail".to_string()),
+//!                 ..Default::default()
+//!             },
+//!             CompletionItem {
+//!                 label: "Bye".to_string(),
+//!                 detail: Some("More detail".to_string()),
+//!                 ..Default::default()
+//!             },
+//!         ].into()))
 //!     }
 //!
 //!     async fn hover(&self, _: HoverParams) -> Result<Option<Hover>> {
 //!         Ok(Some(Hover {
-//!             contents: HoverContents::Scalar(
-//!                 MarkedString::String("You're hovering!".to_string())
-//!             ),
+//!             contents: MarkedString::String("You're hovering!".to_string()).into(),
 //!             range: None
 //!         }))
 //!     }
