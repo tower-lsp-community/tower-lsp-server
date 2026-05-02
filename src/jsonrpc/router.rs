@@ -9,7 +9,7 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use futures::future::{self, BoxFuture, FutureExt};
-use ls_types::LSPAny;
+use ls_types::LspAny;
 use serde::{Serialize, de::DeserializeOwned};
 use tower::{Layer, Service, util::BoxService};
 
@@ -90,7 +90,7 @@ impl<S, E: Send + 'static> Service<Request> for Router<S, E> {
             let (method, id, _) = req.into_parts();
             future::ok(id.map(|id| {
                 let mut error = Error::method_not_found();
-                error.data = Some(LSPAny::from(method));
+                error.data = Some(LspAny::from(method));
                 Response::from_error(id, error)
             }))
             .boxed()
@@ -205,18 +205,18 @@ pub trait FromParams: private::Sealed + Send + Sized + 'static {
     /// # Errors
     ///
     /// - If the given parameters don't match the expected shape
-    fn from_params(params: Option<LSPAny>) -> super::Result<Self>;
+    fn from_params(params: Option<LspAny>) -> super::Result<Self>;
 }
 
 /// Deserialize non-existent JSON-RPC parameters.
 impl FromParams for () {
-    fn from_params(params: Option<LSPAny>) -> super::Result<Self> {
+    fn from_params(params: Option<LspAny>) -> super::Result<Self> {
         match params {
             None
             // See #40: allow lsp clients (e.g. `lsp4j`) to not precisely
             // respect the specification and set `params` to `null` when it
             // should not be present at all.
-            | Some(LSPAny::Null) => Ok(()),
+            | Some(LspAny::Null) => Ok(()),
             Some(p) => Err(Error::invalid_params(format!("Unexpected params: {p}"))),
         }
     }
@@ -224,7 +224,7 @@ impl FromParams for () {
 
 /// Deserialize required JSON-RPC parameters.
 impl<P: DeserializeOwned + Send + 'static> FromParams for (P,) {
-    fn from_params(params: Option<LSPAny>) -> super::Result<Self> {
+    fn from_params(params: Option<LspAny>) -> super::Result<Self> {
         params.map_or_else(
             || Err(Error::invalid_params("Missing params field")),
             |p| {
@@ -304,8 +304,8 @@ mod tests {
 
     #[expect(clippy::unused_async)]
     impl Mock {
-        async fn request(&self) -> Result<LSPAny, Error> {
-            Ok(LSPAny::Null)
+        async fn request(&self) -> Result<LspAny, Error> {
+            Ok(LspAny::Null)
         }
 
         async fn request_params(&self, params: Params) -> Result<Params, Error> {
@@ -328,7 +328,7 @@ mod tests {
         let response = router.ready().await.unwrap().call(request).await;
         assert_eq!(
             response,
-            Ok(Some(Response::from_ok(0.into(), LSPAny::Null)))
+            Ok(Some(Response::from_ok(0.into(), LspAny::Null)))
         );
 
         let params = json!({"foo": -123i32, "bar": "hello world"});

@@ -53,7 +53,7 @@ jobs:
       with:
         components: clippy
 
-    - run: cargo clippy --all-targets --features proposed -- -D warnings
+    - run: cargo clippy --all-targets -- -D warnings
 
   cargo-fmt:
     name: cargo fmt
