@@ -1,15 +1,15 @@
-use async_tungstenite::tokio::accept_async;
+use async_tungstenite::{ByteReader, ByteWriter, tokio::accept_async};
 use tokio::net::TcpListener;
 use tower_lsp_f::jsonrpc::Result;
 use tower_lsp_f::lsp_types::*;
 use tower_lsp_f::{Client, LanguageServer, LspService, Server};
 use tracing::info;
-use ws_stream_tungstenite::*;
 
 #[derive(Debug)]
 struct Backend {
     client: Client,
 }
+
 impl LanguageServer for Backend {
     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
         Ok(InitializeResult {
@@ -133,7 +133,10 @@ async fn main() {
     let listener = TcpListener::bind("127.0.0.1:9257").await.unwrap();
     info!("Listening on {}", listener.local_addr().unwrap());
     let (stream, _) = listener.accept().await.unwrap();
-    let (read, write) = tokio::io::split(WsStream::new(accept_async(stream).await.unwrap()));
+
+    let (write, read) = accept_async(stream).await.unwrap().split();
+    let (write, read) = (ByteWriter::new(write), ByteReader::new(read));
+
     #[cfg(feature = "runtime-agnostic")]
     let (read, write) = (read.compat(), write.compat_write());
 
