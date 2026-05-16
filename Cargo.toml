@@ -34,7 +34,6 @@ runtime-agnostic = ["async-codec-lite"]
 runtime-tokio = ["tokio", "tokio-util"]
 
 [dependencies]
-
 async-codec-lite = { version = "0.0", optional = true }
 auto_impl = "1"
 bytes = "1"
