@@ -10,7 +10,6 @@ pub use self::router::{FromParams, IntoResponse, Method};
 use std::borrow::Cow;
 use std::fmt::{self, Debug, Display, Formatter};
 
-use lsp_types::NumberOrString;
 use serde::de::{self, Deserializer};
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
@@ -41,36 +40,36 @@ pub enum Id {
 impl Display for Id {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Id::Number(id) => Display::fmt(id, f),
-            Id::String(id) => Debug::fmt(id, f),
-            Id::Null => f.write_str("null"),
+            Self::Number(id) => Display::fmt(id, f),
+            Self::String(id) => Debug::fmt(id, f),
+            Self::Null => f.write_str("null"),
         }
     }
 }
 
 impl From<i64> for Id {
     fn from(n: i64) -> Self {
-        Id::Number(n)
+        Self::Number(n)
     }
 }
 
 impl From<&'_ str> for Id {
     fn from(s: &'_ str) -> Self {
-        Id::String(s.to_string())
+        Self::String(s.to_string())
     }
 }
 
 impl From<String> for Id {
     fn from(s: String) -> Self {
-        Id::String(s)
+        Self::String(s)
     }
 }
 
-impl From<NumberOrString> for Id {
-    fn from(num_or_str: NumberOrString) -> Self {
+impl From<lsp_types::Id> for Id {
+    fn from(num_or_str: lsp_types::Id) -> Self {
         match num_or_str {
-            NumberOrString::Number(num) => Id::Number(num as i64),
-            NumberOrString::String(s) => Id::String(s),
+            lsp_types::Id::Int(num) => Self::Number(i64::from(num)),
+            lsp_types::Id::String(s) => Self::String(s),
         }
     }
 }
@@ -89,7 +88,7 @@ impl<'de> Deserialize<'de> for Version {
         let Inner(ver) = Inner::deserialize(deserializer)?;
 
         match ver.as_ref() {
-            "2.0" => Ok(Version),
+            "2.0" => Ok(Self),
             _ => Err(de::Error::custom("expected JSON-RPC version \"2.0\"")),
         }
     }

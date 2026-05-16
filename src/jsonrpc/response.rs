@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
 use std::str::FromStr;
 
-use lsp_types::LSPAny;
+use lsp_types::LspAny;
 use serde::{Deserialize, Serialize};
 
 use super::{Error, Id, Result, Version};
@@ -9,7 +9,7 @@ use super::{Error, Id, Result, Version};
 #[derive(Clone, PartialEq, Deserialize, Serialize)]
 #[serde(untagged)]
 enum Kind {
-    Ok { result: LSPAny },
+    Ok { result: LspAny },
     Err { error: Error },
 }
 
@@ -24,7 +24,7 @@ pub struct Response {
 
 impl Response {
     /// Creates a new successful response from a request ID and `Error` object.
-    pub const fn from_ok(id: Id, result: LSPAny) -> Self {
+    pub const fn from_ok(id: Id, result: LspAny) -> Self {
         Response {
             jsonrpc: Version,
             kind: Kind::Ok { result },
@@ -42,7 +42,7 @@ impl Response {
     }
 
     /// Creates a new response from a request ID and either an `Ok(Value)` or `Err(Error)` body.
-    pub fn from_parts(id: Id, body: Result<LSPAny>) -> Self {
+    pub fn from_parts(id: Id, body: Result<LspAny>) -> Self {
         match body {
             Ok(result) => Response::from_ok(id, result),
             Err(error) => Response::from_error(id, error),
@@ -51,7 +51,7 @@ impl Response {
 
     /// Splits the response into a request ID paired with either an `Ok(Value)` or `Err(Error)` to
     /// signify whether the response is a success or failure.
-    pub fn into_parts(self) -> (Id, Result<LSPAny>) {
+    pub fn into_parts(self) -> (Id, Result<LspAny>) {
         match self.kind {
             Kind::Ok { result } => (self.id, Ok(result)),
             Kind::Err { error } => (self.id, Err(error)),
@@ -71,7 +71,7 @@ impl Response {
     /// Returns the `result` value, if it exists.
     ///
     /// This member only exists if the response indicates success.
-    pub const fn result(&self) -> Option<&LSPAny> {
+    pub const fn result(&self) -> Option<&LspAny> {
         match &self.kind {
             Kind::Ok { result } => Some(result),
             _ => None,

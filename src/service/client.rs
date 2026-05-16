@@ -2,14 +2,20 @@
 
 pub use self::socket::{ClientSocket, RequestStream, ResponseSink};
 
-use std::fmt::{self, Debug, Display, Formatter};
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::task::{Context, Poll};
+use std::{
+    fmt::{self, Debug, Display, Formatter},
+    sync::{
+        Arc,
+        atomic::{AtomicU32, Ordering},
+    },
+    task::{Context, Poll},
+};
 
-use futures::channel::mpsc::{self, Sender};
-use futures::future::BoxFuture;
-use futures::sink::SinkExt;
+use futures::{
+    channel::mpsc::{self, Sender},
+    future::BoxFuture,
+    sink::SinkExt,
+};
 use lsp_types::*;
 use serde::Serialize;
 use tower::Service;
@@ -90,12 +96,15 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn register_capability(
         &self,
         registrations: Vec<Registration>,
     ) -> jsonrpc::Result<()> {
-        use lsp_types::request::RegisterCapability;
-        self.send_request::<RegisterCapability>(RegistrationParams { registrations })
+        self.send_request::<RegistrationRequest>(RegistrationParams { registrations })
             .await
     }
 
@@ -111,12 +120,15 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn unregister_capability(
         &self,
         unregisterations: Vec<Unregistration>,
     ) -> jsonrpc::Result<()> {
-        use lsp_types::request::UnregisterCapability;
-        self.send_request::<UnregisterCapability>(UnregistrationParams { unregisterations })
+        self.send_request::<UnregistrationRequest>(UnregistrationParams { unregisterations })
             .await
     }
 
@@ -127,10 +139,9 @@ impl Client {
     /// This corresponds to the [`window/showMessage`] notification.
     ///
     /// [`window/showMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessage
-    pub async fn show_message<M: Display>(&self, typ: MessageType, message: M) {
-        use lsp_types::notification::ShowMessage;
-        self.send_notification_unchecked::<ShowMessage>(ShowMessageParams {
-            typ,
+    pub async fn show_message<M: Display>(&self, kind: MessageType, message: M) {
+        self.send_notification_unchecked::<ShowMessageNotification>(ShowMessageParams {
+            kind,
             message: message.to_string(),
         })
         .await;
@@ -144,15 +155,18 @@ impl Client {
     /// This corresponds to the [`window/showMessageRequest`] request.
     ///
     /// [`window/showMessageRequest`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessageRequest
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn show_message_request<M: Display>(
         &self,
-        typ: MessageType,
+        kind: MessageType,
         message: M,
         actions: Option<Vec<MessageActionItem>>,
     ) -> jsonrpc::Result<Option<MessageActionItem>> {
-        use lsp_types::request::ShowMessageRequest;
         self.send_request_unchecked::<ShowMessageRequest>(ShowMessageRequestParams {
-            typ,
+            kind,
             message: message.to_string(),
             actions,
         })
@@ -164,10 +178,9 @@ impl Client {
     /// This corresponds to the [`window/logMessage`] notification.
     ///
     /// [`window/logMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_logMessage
-    pub async fn log_message<M: Display>(&self, typ: MessageType, message: M) {
-        use lsp_types::notification::LogMessage;
-        self.send_notification_unchecked::<LogMessage>(LogMessageParams {
-            typ,
+    pub async fn log_message<M: Display>(&self, kind: MessageType, message: M) {
+        self.send_notification_unchecked::<LogMessageNotification>(LogMessageParams {
+            kind,
             message: message.to_string(),
         })
         .await;
@@ -191,10 +204,14 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.16.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn show_document(&self, params: ShowDocumentParams) -> jsonrpc::Result<bool> {
-        use lsp_types::request::ShowDocument;
-        let response = self.send_request::<ShowDocument>(params).await?;
-        Ok(response.success)
+        self.send_request::<ShowDocumentRequest>(params)
+            .await
+            .map(|res| res.success)
     }
 
     // TODO: Add `work_done_progress_create()` here (since 3.15.0) when supported by `tower-lsp`.
@@ -206,16 +223,14 @@ impl Client {
     ///
     /// [`telemetry/event`]: https://microsoft.github.io/language-server-protocol/specification#telemetry_event
     pub async fn telemetry_event<S: Serialize>(&self, data: S) {
-        use lsp_types::notification::TelemetryEvent;
         match serde_json::to_value(data) {
             Err(e) => error!("invalid JSON in `telemetry/event` notification: {}", e),
             Ok(value) => {
                 let value = match value {
-                    LSPAny::Object(value) => OneOf::Left(value),
-                    LSPAny::Array(value) => OneOf::Right(value),
-                    value => OneOf::Right(vec![value]),
+                    LspAny::Object(_) | LspAny::Array(_) => value,
+                    v => LspAny::Array(vec![v]),
                 };
-                self.send_notification_unchecked::<TelemetryEvent>(value)
+                self.send_notification_unchecked::<TelemetryEventNotification>(value)
                     .await;
             }
         }
@@ -244,9 +259,12 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.16.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn code_lens_refresh(&self) -> jsonrpc::Result<()> {
-        use lsp_types::request::CodeLensRefresh;
-        self.send_request::<CodeLensRefresh>(()).await
+        self.send_request::<CodeLensRefreshRequest>(()).await
     }
 
     /// Asks the client to refresh the editors for which this server provides semantic tokens. As a
@@ -271,9 +289,12 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.16.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn semantic_tokens_refresh(&self) -> jsonrpc::Result<()> {
-        use lsp_types::request::SemanticTokensRefresh;
-        self.send_request::<SemanticTokensRefresh>(()).await
+        self.send_request::<SemanticTokensRefreshRequest>(()).await
     }
 
     /// Asks the client to refresh the inline values currently shown in editors. As a result, the
@@ -297,8 +318,11 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.17.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn inline_value_refresh(&self) -> jsonrpc::Result<()> {
-        use lsp_types::request::InlineValueRefreshRequest;
         self.send_request::<InlineValueRefreshRequest>(()).await
     }
 
@@ -323,8 +347,11 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.17.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn inlay_hint_refresh(&self) -> jsonrpc::Result<()> {
-        use lsp_types::request::InlayHintRefreshRequest;
         self.send_request::<InlayHintRefreshRequest>(()).await
     }
 
@@ -347,9 +374,12 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.17.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn workspace_diagnostic_refresh(&self) -> jsonrpc::Result<()> {
-        use lsp_types::request::WorkspaceDiagnosticRefresh;
-        self.send_request::<WorkspaceDiagnosticRefresh>(()).await
+        self.send_request::<DiagnosticRefreshRequest>(()).await
     }
 
     /// Submits validation diagnostics for an open file with the given URI.
@@ -367,11 +397,36 @@ impl Client {
         diags: Vec<Diagnostic>,
         version: Option<i32>,
     ) {
-        use lsp_types::notification::PublishDiagnostics;
-        self.send_notification::<PublishDiagnostics>(PublishDiagnosticsParams::new(
-            uri, diags, version,
+        self.send_notification::<PublishDiagnosticsNotification>(PublishDiagnosticsParams::new(
+            uri, version, diags,
         ))
         .await;
+    }
+
+    /// Creates a work done progress for the given token. Per the spec, the server must not send
+    /// any progress notifications to the given token if an error occurs in this request.
+    ///
+    /// This corresponds to the [`window/workDoneProgress/create`] request.
+    ///
+    /// [`window/workDoneProgress/create`]: https://microsoft.github.io/language-server-protocol/specification#window_workDoneProgress_create
+    ///
+    /// # Initialization
+    ///
+    /// If the request is sent to the client before the server has been initialized, this will
+    /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
+    ///
+    /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Compatibility
+    ///
+    /// This request was introduced in specification version 3.15.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
+    pub async fn create_work_done_progress(&self, token: ProgressToken) -> jsonrpc::Result<()> {
+        self.send_request::<WorkDoneProgressCreateRequest>(WorkDoneProgressCreateParams { token })
+            .await
     }
 
     // Workspace Features
@@ -397,12 +452,15 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.6.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn configuration(
         &self,
         items: Vec<ConfigurationItem>,
-    ) -> jsonrpc::Result<Vec<LSPAny>> {
-        use lsp_types::request::WorkspaceConfiguration;
-        self.send_request::<WorkspaceConfiguration>(ConfigurationParams { items })
+    ) -> jsonrpc::Result<Vec<LspAny>> {
+        self.send_request::<ConfigurationRequest>(ConfigurationParams { items })
             .await
     }
 
@@ -425,8 +483,11 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.6.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn workspace_folders(&self) -> jsonrpc::Result<Option<Vec<WorkspaceFolder>>> {
-        use lsp_types::request::WorkspaceFoldersRequest;
         self.send_request::<WorkspaceFoldersRequest>(()).await
     }
 
@@ -443,13 +504,20 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
     pub async fn apply_edit(
         &self,
         edit: WorkspaceEdit,
-    ) -> jsonrpc::Result<ApplyWorkspaceEditResponse> {
-        use lsp_types::request::ApplyWorkspaceEdit;
-        self.send_request::<ApplyWorkspaceEdit>(ApplyWorkspaceEditParams { edit, label: None })
-            .await
+    ) -> jsonrpc::Result<ApplyWorkspaceEditResult> {
+        self.send_request::<ApplyWorkspaceEditRequest>(ApplyWorkspaceEditParams {
+            edit,
+            label: None,
+            metadata: None,
+        })
+        .await
     }
 
     /// Starts a stream of `$/progress` notifications for a client-provided [`ProgressToken`].
@@ -457,7 +525,7 @@ impl Client {
     /// This method also takes a `title` argument briefly describing the kind of operation being
     /// performed, e.g. "Indexing" or "Linking Dependencies".
     ///
-    /// [`ProgressToken`]: https://docs.rs/lsp-types/latest/lsp_types/type.ProgressToken.html
+    /// [`ProgressToken`]: https://docs.rs/lsp-types/latest/ls_types/lsp/type.ProgressToken.html
     ///
     /// # Initialization
     ///
@@ -466,7 +534,7 @@ impl Client {
     /// # Examples
     ///
     /// ```no_run
-    /// # use tower_lsp_f::{lsp_types::*, Client};
+    /// # use tower_lsp_server::{ls_types::*, Client};
     /// #
     /// # struct Mock {
     /// #     client: Client,
@@ -474,7 +542,7 @@ impl Client {
     /// #
     /// # impl Mock {
     /// # async fn completion(&self, params: CompletionParams) {
-    /// # let work_done_token = ProgressToken::Number(1);
+    /// # let work_done_token = ProgressToken::Int(1);
     /// #
     /// let progress = self
     ///     .client
@@ -507,7 +575,7 @@ impl Client {
     /// This notification will only be sent if the server is initialized.
     pub async fn send_notification<N>(&self, params: N::Params)
     where
-        N: lsp_types::notification::Notification,
+        N: Notification,
     {
         if let State::Initialized | State::ShutDown = self.inner.state.get() {
             self.send_notification_unchecked::<N>(params).await;
@@ -519,7 +587,7 @@ impl Client {
 
     async fn send_notification_unchecked<N>(&self, params: N::Params)
     where
-        N: lsp_types::notification::Notification,
+        N: Notification,
     {
         let request = Request::from_notification::<N>(params);
         if self.clone().call(request).await.is_err() {
@@ -535,9 +603,14 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Errors
+    ///
+    /// - The client is not yet initialized
+    /// - The client returns an error
     pub async fn send_request<R>(&self, params: R::Params) -> jsonrpc::Result<R::Result>
     where
-        R: lsp_types::request::Request,
+        R: lsp_types::Request,
     {
         if let State::Initialized | State::ShutDown = self.inner.state.get() {
             self.send_request_unchecked::<R>(params).await
@@ -551,14 +624,13 @@ impl Client {
 
     async fn send_request_unchecked<R>(&self, params: R::Params) -> jsonrpc::Result<R::Result>
     where
-        R: lsp_types::request::Request,
+        R: lsp_types::Request,
     {
         let id = self.next_request_id();
         let request = Request::from_request::<R>(id, params);
 
-        let response = match self.clone().call(request).await {
-            Ok(Some(response)) => response,
-            Ok(None) | Err(_) => return Err(Error::internal_error()),
+        let Ok(Some(response)) = self.clone().call(request).await else {
+            return Err(Error::internal_error());
         };
 
         let (_, result) = response.into_parts();
@@ -630,7 +702,10 @@ mod tests {
     use std::future::Future;
 
     use futures::stream::StreamExt;
-    use lsp_types::notification::{LogMessage, PublishDiagnostics, ShowMessage, TelemetryEvent};
+    use lsp_types::{
+        LogMessageNotification, PublishDiagnosticsNotification, ShowMessageNotification,
+        TelemetryEventNotification,
+    };
     use serde_json::json;
 
     use super::*;
@@ -652,57 +727,59 @@ mod tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn log_message() {
-        let (typ, msg) = (MessageType::LOG, "foo bar".to_owned());
-        let expected = Request::from_notification::<LogMessage>(LogMessageParams {
-            typ,
+        let (kind, msg) = (MessageType::Log, "foo bar".to_owned());
+        let expected = Request::from_notification::<LogMessageNotification>(LogMessageParams {
+            kind,
             message: msg.clone(),
         });
 
-        assert_client_message(|p| async move { p.log_message(typ, msg).await }, expected).await;
+        assert_client_message(|p| async move { p.log_message(kind, msg).await }, expected).await;
     }
 
     #[tokio::test(flavor = "current_thread")]
     async fn show_message() {
-        let (typ, msg) = (MessageType::LOG, "foo bar".to_owned());
-        let expected = Request::from_notification::<ShowMessage>(ShowMessageParams {
-            typ,
+        let (kind, msg) = (MessageType::Log, "foo bar".to_owned());
+        let expected = Request::from_notification::<ShowMessageNotification>(ShowMessageParams {
+            kind,
             message: msg.clone(),
         });
 
-        assert_client_message(|p| async move { p.show_message(typ, msg).await }, expected).await;
+        assert_client_message(|p| async move { p.show_message(kind, msg).await }, expected).await;
     }
 
     #[tokio::test(flavor = "current_thread")]
     async fn telemetry_event() {
         let null = json!(null);
-        let value = OneOf::Right(vec![null.clone()]);
-        let expected = Request::from_notification::<TelemetryEvent>(value);
+        let expected = Request::from_notification::<TelemetryEventNotification>(
+            serde_json::to_value(vec![null.clone()]).unwrap(),
+        );
         assert_client_message(|p| async move { p.telemetry_event(null).await }, expected).await;
 
         let array = json!([1, 2, 3]);
-        let value = OneOf::Right(array.as_array().unwrap().to_owned());
-        let expected = Request::from_notification::<TelemetryEvent>(value);
+        let expected = Request::from_notification::<TelemetryEventNotification>(array.clone());
         assert_client_message(|p| async move { p.telemetry_event(array).await }, expected).await;
 
         let object = json!({});
-        let value = OneOf::Left(object.as_object().unwrap().to_owned());
-        let expected = Request::from_notification::<TelemetryEvent>(value);
+        let expected = Request::from_notification::<TelemetryEventNotification>(object.clone());
         assert_client_message(|p| async move { p.telemetry_event(object).await }, expected).await;
 
         let other = json!("hello");
-        let wrapped = LSPAny::Array(vec![other.clone()]);
-        let value = OneOf::Right(wrapped.as_array().unwrap().to_owned());
-        let expected = Request::from_notification::<TelemetryEvent>(value);
+        let wrapped = LspAny::Array(vec![other.clone()]);
+        let expected = Request::from_notification::<TelemetryEventNotification>(wrapped);
         assert_client_message(|p| async move { p.telemetry_event(other).await }, expected).await;
     }
 
     #[tokio::test(flavor = "current_thread")]
     async fn publish_diagnostics() {
         let uri: Uri = "file:///path/to/file".parse().unwrap();
-        let diagnostics = vec![Diagnostic::new_simple(Range::default(), "example".into())];
+        let diagnostics = vec![Diagnostic {
+            range: Range::default(),
+            message: "example".into(),
+            ..Default::default()
+        }];
 
-        let params = PublishDiagnosticsParams::new(uri.clone(), diagnostics.clone(), None);
-        let expected = Request::from_notification::<PublishDiagnostics>(params);
+        let params = PublishDiagnosticsParams::new(uri.clone(), None, diagnostics.clone());
+        let expected = Request::from_notification::<PublishDiagnosticsNotification>(params);
 
         assert_client_message(
             |p| async move { p.publish_diagnostics(uri, diagnostics, None).await },

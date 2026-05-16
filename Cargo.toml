@@ -32,7 +32,6 @@ exclude = ["FEATURES.md"]
 default = ["runtime-tokio"]
 runtime-agnostic = ["async-codec-lite"]
 runtime-tokio = ["tokio", "tokio-util"]
-proposed = ["lsp-types/proposed"]
 
 [dependencies]
 
@@ -45,7 +44,7 @@ futures = { version = "0.3", default-features = false, features = [
 	"async-await",
 ] }
 httparse = "1"
-lsp-types = { version = "0.99", package = "lsp-types-f" }
+lsp-types = { package = "gen-lsp-types", version = "=0.5.0", features = ["url"]}
 memchr = "2"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }

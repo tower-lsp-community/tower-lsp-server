@@ -85,10 +85,6 @@ pub use self::service::progress::{
 pub use self::service::{Client, ClientSocket, ExitedError, LspService, LspServiceBuilder};
 pub use self::transport::{Loopback, Server};
 
-use lsp_types::request::{
-    GotoDeclarationParams, GotoDeclarationResponse, GotoImplementationParams,
-    GotoImplementationResponse, GotoTypeDefinitionParams, GotoTypeDefinitionResponse,
-};
 use lsp_types::*;
 use tracing::{error, warn};
 
@@ -159,7 +155,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/didOpen")]
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/didOpen notification, but it is not implemented");
+        warn!("got a `textDocument/didOpen` notification, but it is not implemented");
     }
 
     /// The [`textDocument/didChange`] notification is sent from the client to the server to signal
@@ -172,7 +168,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/didChange")]
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/didChange notification, but it is not implemented");
+        warn!("got a `textDocument/didChange` notification, but it is not implemented");
     }
 
     /// The [`textDocument/willSave`] notification is sent from the client to the server before the
@@ -182,7 +178,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/willSave")]
     async fn will_save(&self, params: WillSaveTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/willSave notification, but it is not implemented");
+        warn!("got a `textDocument/willSave` notification, but it is not implemented");
     }
 
     /// The [`textDocument/willSaveWaitUntil`] request is sent from the client to the server before
@@ -201,7 +197,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: WillSaveTextDocumentParams,
     ) -> Result<Option<Vec<TextEdit>>> {
         let _ = params;
-        error!("Got a textDocument/willSaveWaitUntil request, but it is not implemented");
+        error!("got a `textDocument/willSaveWaitUntil` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -212,7 +208,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/didSave")]
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/didSave notification, but it is not implemented");
+        warn!("got a `textDocument/didSave` notification, but it is not implemented");
     }
 
     /// The [`textDocument/didClose`] notification is sent from the client to the server when the
@@ -225,7 +221,49 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/didClose")]
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/didClose notification, but it is not implemented");
+        warn!("got a `textDocument/didClose` notification, but it is not implemented");
+    }
+
+    // Notebook Document Synchronization
+
+    /// The [`notebookDocument/didOpen`] notification is sent from the client to the server when a new notebook document is opened.
+    /// It is only sent for notebooks selected by the `notebookDocumentSync` server capability.
+    ///
+    /// [`notebookDocument/didOpen`]: https://microsoft.github.io/language-server-protocol/specification/#notebookDocument_didChange
+    #[rpc(name = "notebookDocument/didOpen")]
+    async fn notebook_did_open(&self, params: DidOpenNotebookDocumentParams) {
+        let _ = params;
+        warn!("got a `notebookDocument/didOpen` notification, but it is not implemented");
+    }
+
+    /// The [`notebookDocument/didChange`] notification is sent from the client to the server when a notebook document changes.
+    /// It is only sent for notebooks selected by the `notebookDocumentSync` server capability.
+    ///
+    /// [`notebookDocument/didChange`]: https://microsoft.github.io/language-server-protocol/specification#notebookDocument_didChange
+    #[rpc(name = "notebookDocument/didChange")]
+    async fn notebook_did_change(&self, params: DidChangeNotebookDocumentParams) {
+        let _ = params;
+        warn!("got a `notebookDocument/didChange` notification, but it is not implemented");
+    }
+
+    /// The [`notebookDocument/didSave`] notification is sent from the client to the server when a notebook document is saved.
+    /// It is only sent for notebooks selected by the `notebookDocumentSync` server capability.
+    ///
+    /// [`notebookDocument/didSave`]: https://microsoft.github.io/language-server-protocol/specification#notebookDocument_didSave
+    #[rpc(name = "notebookDocument/didSave")]
+    async fn notebook_did_save(&self, params: DidSaveNotebookDocumentParams) {
+        let _ = params;
+        warn!("got a `notebookDocument/didSave` notification, but it is not implemented");
+    }
+
+    /// The [`notebookDocument/didClose`] notification is sent from the client to the server when a notebook document is closed.
+    /// It is only sent for notebooks selected by the `notebookDocumentSync` server capability.
+    ///
+    /// [`notebookDocument/didClose`]: https://microsoft.github.io/language-server-protocol/specification#notebookDocument_didClose
+    #[rpc(name = "notebookDocument/didClose")]
+    async fn notebook_did_close(&self, params: DidCloseNotebookDocumentParams) {
+        let _ = params;
+        warn!("got a `notebookDocument/didClose` notification, but it is not implemented");
     }
 
     // Language Features
@@ -239,7 +277,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     ///
     /// This request was introduced in specification version 3.14.0.
     ///
-    /// The [`GotoDeclarationResponse::Link`](lsp_types::GotoDefinitionResponse::Link) return value
+    /// The [`GotoDeclarationResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link) return value
     /// was introduced in specification version 3.14.0 and requires client-side support in order to
     /// be used. It can be returned if the client set the following field to `true` in the
     /// [`initialize`](Self::initialize) method:
@@ -250,10 +288,10 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/declaration")]
     async fn goto_declaration(
         &self,
-        params: GotoDeclarationParams,
-    ) -> Result<Option<GotoDeclarationResponse>> {
+        params: DeclarationParams,
+    ) -> Result<Option<DeclarationResponse>> {
         let _ = params;
-        error!("Got a textDocument/declaration request, but it is not implemented");
+        error!("got a `textDocument/declaration` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -264,7 +302,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     ///
     /// # Compatibility
     ///
-    /// The [`GotoDefinitionResponse::Link`](lsp_types::GotoDefinitionResponse::Link) return value
+    /// The [`GotoDefinitionResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link) return value
     /// was introduced in specification version 3.14.0 and requires client-side support in order to
     /// be used. It can be returned if the client set the following field to `true` in the
     /// [`initialize`](Self::initialize) method:
@@ -275,10 +313,10 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/definition")]
     async fn goto_definition(
         &self,
-        params: GotoDefinitionParams,
-    ) -> Result<Option<GotoDefinitionResponse>> {
+        params: DefinitionParams,
+    ) -> Result<Option<DefinitionResponse>> {
         let _ = params;
-        error!("Got a textDocument/definition request, but it is not implemented");
+        error!("got a `textDocument/definition` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -291,7 +329,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     ///
     /// This request was introduced in specification version 3.6.0.
     ///
-    /// The [`GotoTypeDefinitionResponse::Link`](lsp_types::GotoDefinitionResponse::Link) return
+    /// The [`GotoTypeDefinitionResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link) return
     /// value was introduced in specification version 3.14.0 and requires client-side support in
     /// order to be used. It can be returned if the client set the following field to `true` in the
     /// [`initialize`](Self::initialize) method:
@@ -302,10 +340,10 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/typeDefinition")]
     async fn goto_type_definition(
         &self,
-        params: GotoTypeDefinitionParams,
-    ) -> Result<Option<GotoTypeDefinitionResponse>> {
+        params: TypeDefinitionParams,
+    ) -> Result<Option<TypeDefinitionResponse>> {
         let _ = params;
-        error!("Got a textDocument/typeDefinition request, but it is not implemented");
+        error!("got a `textDocument/typeDefinition` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -318,7 +356,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     ///
     /// This request was introduced in specification version 3.6.0.
     ///
-    /// The [`GotoImplementationResponse::Link`](lsp_types::GotoDefinitionResponse::Link)
+    /// The [`GotoImplementationResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link)
     /// return value was introduced in specification version 3.14.0 and requires client-side
     /// support in order to be used. It can be returned if the client set the following field to
     /// `true` in the [`initialize`](Self::initialize) method:
@@ -329,10 +367,10 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/implementation")]
     async fn goto_implementation(
         &self,
-        params: GotoImplementationParams,
-    ) -> Result<Option<GotoImplementationResponse>> {
+        params: ImplementationParams,
+    ) -> Result<Option<ImplementationResponse>> {
         let _ = params;
-        error!("Got a textDocument/implementation request, but it is not implemented");
+        error!("got a `textDocument/implementation` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -343,7 +381,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/references")]
     async fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
         let _ = params;
-        error!("Got a textDocument/references request, but it is not implemented");
+        error!("got a `textDocument/references` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -371,7 +409,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: CallHierarchyPrepareParams,
     ) -> Result<Option<Vec<CallHierarchyItem>>> {
         let _ = params;
-        error!("Got a textDocument/prepareCallHierarchy request, but it is not implemented");
+        error!("got a `textDocument/prepareCallHierarchy` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -393,7 +431,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: CallHierarchyIncomingCallsParams,
     ) -> Result<Option<Vec<CallHierarchyIncomingCall>>> {
         let _ = params;
-        error!("Got a callHierarchy/incomingCalls request, but it is not implemented");
+        error!("got a `callHierarchy/incomingCalls` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -415,7 +453,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: CallHierarchyOutgoingCallsParams,
     ) -> Result<Option<Vec<CallHierarchyOutgoingCall>>> {
         let _ = params;
-        error!("Got a callHierarchy/outgoingCalls request, but it is not implemented");
+        error!("got a `callHierarchy/outgoingCalls` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -441,7 +479,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: TypeHierarchyPrepareParams,
     ) -> Result<Option<Vec<TypeHierarchyItem>>> {
         let _ = params;
-        error!("Got a textDocument/prepareTypeHierarchy request, but it is not implemented");
+        error!("got a `textDocument/prepareTypeHierarchy` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -462,7 +500,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: TypeHierarchySupertypesParams,
     ) -> Result<Option<Vec<TypeHierarchyItem>>> {
         let _ = params;
-        error!("Got a typeHierarchy/supertypes request, but it is not implemented");
+        error!("got a `typeHierarchy/supertypes` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -483,7 +521,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: TypeHierarchySubtypesParams,
     ) -> Result<Option<Vec<TypeHierarchyItem>>> {
         let _ = params;
-        error!("Got a typeHierarchy/subtypes request, but it is not implemented");
+        error!("got a `typeHierarchy/subtypes` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -503,7 +541,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: DocumentHighlightParams,
     ) -> Result<Option<Vec<DocumentHighlight>>> {
         let _ = params;
-        error!("Got a textDocument/documentHighlight request, but it is not implemented");
+        error!("got a `textDocument/documentHighlight` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -527,7 +565,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/documentLink")]
     async fn document_link(&self, params: DocumentLinkParams) -> Result<Option<Vec<DocumentLink>>> {
         let _ = params;
-        error!("Got a textDocument/documentLink request, but it is not implemented");
+        error!("got a `textDocument/documentLink` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -541,7 +579,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "documentLink/resolve")]
     async fn document_link_resolve(&self, params: DocumentLink) -> Result<DocumentLink> {
         let _ = params;
-        error!("Got a documentLink/resolve request, but it is not implemented");
+        error!("got a `documentLink/resolve` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -555,7 +593,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/hover")]
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
         let _ = params;
-        error!("Got a textDocument/hover request, but it is not implemented");
+        error!("got a `textDocument/hover` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -566,7 +604,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/codeLens")]
     async fn code_lens(&self, params: CodeLensParams) -> Result<Option<Vec<CodeLens>>> {
         let _ = params;
-        error!("Got a textDocument/codeLens request, but it is not implemented");
+        error!("got a `textDocument/codeLens` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -577,7 +615,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "codeLens/resolve")]
     async fn code_lens_resolve(&self, params: CodeLens) -> Result<CodeLens> {
         let _ = params;
-        error!("Got a codeLens/resolve request, but it is not implemented");
+        error!("got a `codeLens/resolve` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -592,7 +630,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/foldingRange")]
     async fn folding_range(&self, params: FoldingRangeParams) -> Result<Option<Vec<FoldingRange>>> {
         let _ = params;
-        error!("Got a textDocument/foldingRange request, but it is not implemented");
+        error!("got a `textDocument/foldingRange` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -614,7 +652,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: SelectionRangeParams,
     ) -> Result<Option<Vec<SelectionRange>>> {
         let _ = params;
-        error!("Got a textDocument/selectionRange request, but it is not implemented");
+        error!("got a `textDocument/selectionRange` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -636,7 +674,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: DocumentSymbolParams,
     ) -> Result<Option<DocumentSymbolResponse>> {
         let _ = params;
-        error!("Got a textDocument/documentSymbol request, but it is not implemented");
+        error!("got a `textDocument/documentSymbol` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -659,9 +697,9 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     async fn semantic_tokens_full(
         &self,
         params: SemanticTokensParams,
-    ) -> Result<Option<SemanticTokensResult>> {
+    ) -> Result<Option<SemanticTokens>> {
         let _ = params;
-        error!("Got a textDocument/semanticTokens/full request, but it is not implemented");
+        error!("got a `textDocument/semanticTokens/full` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -680,9 +718,9 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     async fn semantic_tokens_full_delta(
         &self,
         params: SemanticTokensDeltaParams,
-    ) -> Result<Option<SemanticTokensFullDeltaResult>> {
+    ) -> Result<Option<SemanticTokensDeltaResponse>> {
         let _ = params;
-        error!("Got a textDocument/semanticTokens/full/delta request, but it is not implemented");
+        error!("got a `textDocument/semanticTokens/full/delta` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -706,9 +744,9 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     async fn semantic_tokens_range(
         &self,
         params: SemanticTokensRangeParams,
-    ) -> Result<Option<SemanticTokensRangeResult>> {
+    ) -> Result<Option<SemanticTokens>> {
         let _ = params;
-        error!("Got a textDocument/semanticTokens/range request, but it is not implemented");
+        error!("got a `textDocument/semanticTokens/range` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -724,7 +762,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/inlineValue")]
     async fn inline_value(&self, params: InlineValueParams) -> Result<Option<Vec<InlineValue>>> {
         let _ = params;
-        error!("Got a textDocument/inlineValue request, but it is not implemented");
+        error!("got a `textDocument/inlineValue` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -740,7 +778,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/inlayHint")]
     async fn inlay_hint(&self, params: InlayHintParams) -> Result<Option<Vec<InlayHint>>> {
         let _ = params;
-        error!("Got a textDocument/inlayHint request, but it is not implemented");
+        error!("got a `textDocument/inlayHint` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -769,7 +807,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "inlayHint/resolve")]
     async fn inlay_hint_resolve(&self, params: InlayHint) -> Result<InlayHint> {
         let _ = params;
-        error!("Got a inlayHint/resolve request, but it is not implemented");
+        error!("got a `inlayHint/resolve` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -799,7 +837,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/moniker")]
     async fn moniker(&self, params: MonikerParams) -> Result<Option<Vec<Moniker>>> {
         let _ = params;
-        error!("Got a textDocument/moniker request, but it is not implemented");
+        error!("got a `textDocument/moniker` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -824,7 +862,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/completion")]
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
         let _ = params;
-        error!("Got a textDocument/completion request, but it is not implemented");
+        error!("got a `textDocument/completion` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -835,7 +873,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "completionItem/resolve")]
     async fn completion_resolve(&self, params: CompletionItem) -> Result<CompletionItem> {
         let _ = params;
-        error!("Got a completionItem/resolve request, but it is not implemented");
+        error!("got a `completionItem/resolve` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -857,9 +895,9 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     async fn diagnostic(
         &self,
         params: DocumentDiagnosticParams,
-    ) -> Result<DocumentDiagnosticReportResult> {
+    ) -> Result<DocumentDiagnosticReport> {
         let _ = params;
-        error!("Got a textDocument/diagnostic request, but it is not implemented");
+        error!("got a `textDocument/diagnostic` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -895,9 +933,9 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     async fn workspace_diagnostic(
         &self,
         params: WorkspaceDiagnosticParams,
-    ) -> Result<WorkspaceDiagnosticReportResult> {
+    ) -> Result<WorkspaceDiagnosticReport> {
         let _ = params;
-        error!("Got a workspace/diagnostic request, but it is not implemented");
+        error!("got a `workspace/diagnostic` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -908,7 +946,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/signatureHelp")]
     async fn signature_help(&self, params: SignatureHelpParams) -> Result<Option<SignatureHelp>> {
         let _ = params;
-        error!("Got a textDocument/signatureHelp request, but it is not implemented");
+        error!("got a `textDocument/signatureHelp` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -968,7 +1006,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/codeAction")]
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
         let _ = params;
-        error!("Got a textDocument/codeAction request, but it is not implemented");
+        error!("got a `textDocument/codeAction` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -986,7 +1024,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "codeAction/resolve")]
     async fn code_action_resolve(&self, params: CodeAction) -> Result<CodeAction> {
         let _ = params;
-        error!("Got a codeAction/resolve request, but it is not implemented");
+        error!("got a `codeAction/resolve` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1007,7 +1045,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/documentColor")]
     async fn document_color(&self, params: DocumentColorParams) -> Result<Vec<ColorInformation>> {
         let _ = params;
-        error!("Got a textDocument/documentColor request, but it is not implemented");
+        error!("got a `textDocument/documentColor` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1033,7 +1071,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: ColorPresentationParams,
     ) -> Result<Vec<ColorPresentation>> {
         let _ = params;
-        error!("Got a textDocument/colorPresentation request, but it is not implemented");
+        error!("got a `textDocument/colorPresentation` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1044,11 +1082,11 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/formatting")]
     async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
         let _ = params;
-        error!("Got a textDocument/formatting request, but it is not implemented");
+        error!("got a `textDocument/formatting` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
-    /// The [`textDocument/rangeFormatting`] request is sent from the client to the server to
+    /// The [`textDocument/rangeFormatting`] request is sent from pub(crate) the client to the server to
     /// format a given range in a document.
     ///
     /// [`textDocument/rangeFormatting`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_rangeFormatting
@@ -1058,7 +1096,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: DocumentRangeFormattingParams,
     ) -> Result<Option<Vec<TextEdit>>> {
         let _ = params;
-        error!("Got a textDocument/rangeFormatting request, but it is not implemented");
+        error!("got a `textDocument/rangeFormatting` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1072,7 +1110,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: DocumentOnTypeFormattingParams,
     ) -> Result<Option<Vec<TextEdit>>> {
         let _ = params;
-        error!("Got a textDocument/onTypeFormatting request, but it is not implemented");
+        error!("got a `textDocument/onTypeFormatting` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1084,7 +1122,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "textDocument/rename")]
     async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
         let _ = params;
-        error!("Got a textDocument/rename request, but it is not implemented");
+        error!("got a `textDocument/rename` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1100,9 +1138,9 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     async fn prepare_rename(
         &self,
         params: TextDocumentPositionParams,
-    ) -> Result<Option<PrepareRenameResponse>> {
+    ) -> Result<Option<PrepareRenameResult>> {
         let _ = params;
-        error!("Got a textDocument/prepareRename request, but it is not implemented");
+        error!("got a `textDocument/prepareRename` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1127,7 +1165,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
         params: LinkedEditingRangeParams,
     ) -> Result<Option<LinkedEditingRanges>> {
         let _ = params;
-        error!("Got a textDocument/linkedEditingRange request, but it is not implemented");
+        error!("got a `textDocument/linkedEditingRange` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1153,9 +1191,9 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     async fn symbol(
         &self,
         params: WorkspaceSymbolParams,
-    ) -> Result<Option<Vec<SymbolInformation>>> {
+    ) -> Result<Option<WorkspaceSymbolResponse>> {
         let _ = params;
-        error!("Got a workspace/symbol request, but it is not implemented");
+        error!("got a `workspace/symbol` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1172,7 +1210,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspaceSymbol/resolve")]
     async fn symbol_resolve(&self, params: WorkspaceSymbol) -> Result<WorkspaceSymbol> {
         let _ = params;
-        error!("Got a workspaceSymbol/resolve request, but it is not implemented");
+        error!("got a `workspaceSymbol/resolve` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1183,7 +1221,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspace/didChangeConfiguration")]
     async fn did_change_configuration(&self, params: DidChangeConfigurationParams) {
         let _ = params;
-        warn!("Got a workspace/didChangeConfiguration notification, but it is not implemented");
+        warn!("got a `workspace/didChangeConfiguration` notification, but it is not implemented");
     }
 
     /// The [`workspace/didChangeWorkspaceFolders`] notification is sent from the client to the
@@ -1202,7 +1240,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspace/didChangeWorkspaceFolders")]
     async fn did_change_workspace_folders(&self, params: DidChangeWorkspaceFoldersParams) {
         let _ = params;
-        warn!("Got a workspace/didChangeWorkspaceFolders notification, but it is not implemented");
+        warn!("got a `workspace/didChangeWorkspaceFolders` notification, but it is not implemented");
     }
 
     /// The [`workspace/willCreateFiles`] request is sent from the client to the server before
@@ -1221,7 +1259,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspace/willCreateFiles")]
     async fn will_create_files(&self, params: CreateFilesParams) -> Result<Option<WorkspaceEdit>> {
         let _ = params;
-        error!("Got a workspace/willCreateFiles request, but it is not implemented");
+        error!("got a `workspace/willCreateFiles` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1232,7 +1270,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspace/didCreateFiles")]
     async fn did_create_files(&self, params: CreateFilesParams) {
         let _ = params;
-        warn!("Got a workspace/didCreateFiles notification, but it is not implemented");
+        warn!("got a `workspace/didCreateFiles` notification, but it is not implemented");
     }
 
     /// The [`workspace/willRenameFiles`] request is sent from the client to the server before
@@ -1251,7 +1289,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspace/willRenameFiles")]
     async fn will_rename_files(&self, params: RenameFilesParams) -> Result<Option<WorkspaceEdit>> {
         let _ = params;
-        error!("Got a workspace/willRenameFiles request, but it is not implemented");
+        error!("got a `workspace/willRenameFiles` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1262,7 +1300,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspace/didRenameFiles")]
     async fn did_rename_files(&self, params: RenameFilesParams) {
         let _ = params;
-        warn!("Got a workspace/didRenameFiles notification, but it is not implemented");
+        warn!("got a `workspace/didRenameFiles` notification, but it is not implemented");
     }
 
     /// The [`workspace/willDeleteFiles`] request is sent from the client to the server before
@@ -1282,7 +1320,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspace/willDeleteFiles")]
     async fn will_delete_files(&self, params: DeleteFilesParams) -> Result<Option<WorkspaceEdit>> {
         let _ = params;
-        error!("Got a workspace/willDeleteFiles request, but it is not implemented");
+        error!("got a `workspace/willDeleteFiles` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
@@ -1293,7 +1331,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspace/didDeleteFiles")]
     async fn did_delete_files(&self, params: DeleteFilesParams) {
         let _ = params;
-        warn!("Got a workspace/didDeleteFiles notification, but it is not implemented");
+        warn!("got a `workspace/didDeleteFiles` notification, but it is not implemented");
     }
 
     /// The [`workspace/didChangeWatchedFiles`] notification is sent from the client to the server
@@ -1307,7 +1345,7 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     #[rpc(name = "workspace/didChangeWatchedFiles")]
     async fn did_change_watched_files(&self, params: DidChangeWatchedFilesParams) {
         let _ = params;
-        warn!("Got a workspace/didChangeWatchedFiles notification, but it is not implemented");
+        warn!("got a `workspace/didChangeWatchedFiles` notification, but it is not implemented");
     }
 
     /// The [`workspace/executeCommand`] request is sent from the client to the server to trigger
@@ -1318,13 +1356,13 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     /// In most cases, the server creates a [`WorkspaceEdit`] structure and applies the changes to
     /// the workspace using `Client::apply_edit()` before returning from this function.
     #[rpc(name = "workspace/executeCommand")]
-    async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<LSPAny>> {
+    async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<LspAny>> {
         let _ = params;
-        error!("Got a workspace/executeCommand request, but it is not implemented");
+        error!("got a `workspace/executeCommand` request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
-    // TODO: Add `work_done_progress_cancel()` here (since 3.15.0) when supported by `tower-lsp`.
+    // TODO: Add `work_done_progress_cancel()` here (since 3.15.0) when supported by `tower-lsp-server`
     // https://github.com/ebkalderon/tower-lsp/issues/176
 }
 }

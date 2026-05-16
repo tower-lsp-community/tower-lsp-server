@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-use lsp_types::LSPAny;
+use lsp_types::LspAny;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use super::{Id, Version};
@@ -23,7 +23,7 @@ pub struct Request {
     method: Cow<'static, str>,
     #[serde(default, deserialize_with = "deserialize_some")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    params: Option<LSPAny>,
+    params: Option<LspAny>,
     #[serde(default, deserialize_with = "deserialize_some")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<Id>,
@@ -53,11 +53,11 @@ impl Request {
     /// happen in practice (unless the trait was implemented incorrectly).
     pub(crate) fn from_request<R>(id: Id, params: R::Params) -> Self
     where
-        R: lsp_types::request::Request,
+        R: lsp_types::Request,
     {
         Request {
             jsonrpc: Version,
-            method: R::METHOD.into(),
+            method: Cow::Owned(R::METHOD.to_string()),
             params: Some(serde_json::to_value(params).unwrap()),
             id: Some(id),
         }
@@ -72,11 +72,11 @@ impl Request {
     /// should never happen in practice (unless the trait was implemented incorrectly).
     pub(crate) fn from_notification<N>(params: N::Params) -> Self
     where
-        N: lsp_types::notification::Notification,
+        N: lsp_types::Notification,
     {
         Request {
             jsonrpc: Version,
-            method: N::METHOD.into(),
+            method: Cow::Owned(N::METHOD.to_string()),
             params: Some(serde_json::to_value(params).unwrap()),
             id: None,
         }
@@ -93,12 +93,12 @@ impl Request {
     }
 
     /// Returns the `params` field, if present.
-    pub fn params(&self) -> Option<&LSPAny> {
+    pub fn params(&self) -> Option<&LspAny> {
         self.params.as_ref()
     }
 
     /// Splits this request into the method name, request ID, and the `params` field, if present.
-    pub fn into_parts(self) -> (Cow<'static, str>, Option<Id>, Option<LSPAny>) {
+    pub fn into_parts(self) -> (Cow<'static, str>, Option<Id>, Option<LspAny>) {
         (self.method, self.id, self.params)
     }
 }
@@ -147,7 +147,7 @@ impl FromStr for Request {
 #[derive(Debug)]
 pub struct RequestBuilder {
     method: Cow<'static, str>,
-    params: Option<LSPAny>,
+    params: Option<LspAny>,
     id: Option<Id>,
 }
 
@@ -163,7 +163,7 @@ impl RequestBuilder {
     /// Sets the `params` member of the request to the given value.
     ///
     /// This member is omitted from the request by default.
-    pub fn params<V: Into<LSPAny>>(mut self, params: V) -> Self {
+    pub fn params<V: Into<LspAny>>(mut self, params: V) -> Self {
         self.params = Some(params.into());
         self
     }
