@@ -1,4 +1,5 @@
 use tower_lsp_f::jsonrpc::Result;
+use tower_lsp_f::lsp_extensions::{ChangeNotificationsEx, CompletionItemEx};
 use tower_lsp_f::lsp_types::*;
 use tower_lsp_f::{Client, LanguageServer, LspService, Server};
 
@@ -25,7 +26,7 @@ impl LanguageServer for Backend {
                 workspace: Some(WorkspaceOptions {
                     workspace_folders: Some(WorkspaceFoldersServerCapabilities {
                         supported: Some(true),
-                        change_notifications: Some(true.into()),
+                        change_notifications: ChangeNotifications::new_some(true),
                     }),
                     file_operations: None,
                     text_document_content: None,
@@ -109,11 +110,7 @@ impl LanguageServer for Backend {
                     detail: Some("Some detail".to_string()),
                     ..Default::default()
                 },
-                CompletionItem {
-                    label: "Bye".to_string(),
-                    detail: Some("More detail".to_string()),
-                    ..Default::default()
-                },
+                CompletionItem::new_simple("Bye", "More detail"),
             ]
             .into(),
         ))

@@ -7,6 +7,7 @@
 //! ```rust
 //! use tower_lsp_f::jsonrpc::Result;
 //! use tower_lsp_f::lsp_types::*;
+//! use tower_lsp_f::lsp_extensions::CompletionItemEx;
 //! use tower_lsp_f::{Client, LanguageServer, LspService, Server};
 //!
 //! #[derive(Debug)]
@@ -43,11 +44,10 @@
 //!                 detail: Some("Some detail".to_string()),
 //!                 ..Default::default()
 //!             },
-//!             CompletionItem {
-//!                 label: "Bye".to_string(),
-//!                 detail: Some("More detail".to_string()),
-//!                 ..Default::default()
-//!             }
+//!             CompletionItem::new_simple(
+//!                 "Bye",
+//!                 "More detail"
+//!             )
 //!         ].into()))
 //!     }
 //!
@@ -99,6 +99,7 @@ use tracing::{error, warn};
 use self::jsonrpc::{Error, Result};
 
 pub mod jsonrpc;
+pub mod lsp_extensions;
 
 mod codec;
 mod service;
