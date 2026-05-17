@@ -32,10 +32,8 @@ exclude = ["FEATURES.md"]
 default = ["runtime-tokio"]
 runtime-agnostic = ["async-codec-lite"]
 runtime-tokio = ["tokio", "tokio-util"]
-proposed = ["lsp-types/proposed"]
 
 [dependencies]
-
 async-codec-lite = { version = "0.0", optional = true }
 auto_impl = "1"
 bytes = "1"
@@ -45,7 +43,7 @@ futures = { version = "0.3", default-features = false, features = [
 	"async-await",
 ] }
 httparse = "1"
-lsp-types = { version = "0.99", package = "lsp-types-f" }
+lsp-types = { package = "gen-lsp-types", version = "=0.5.0", features = ["url"]}
 memchr = "2"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
@@ -55,7 +53,7 @@ tower = { version = "0.5", default-features = false, features = ["util"] }
 tracing = "0.1"
 
 [dev-dependencies]
-async-tungstenite = { version = "0.29", features = ["tokio-runtime"] }
+async-tungstenite = { version = "0.34", features = ["tokio-runtime"] }
 tokio-util = { version = "0.7", features = ["compat"] }
 tokio = { version = "1", features = [
 	"io-util",

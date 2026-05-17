@@ -3,12 +3,9 @@
 use std::fmt::{self, Debug, Formatter};
 use std::marker::PhantomData;
 
-use lsp_types::{
-    ProgressParams, ProgressParamsValue, ProgressToken, WorkDoneProgress, WorkDoneProgressBegin,
-    WorkDoneProgressReport, notification::Progress as ProgressNotification,
-};
-
 use super::Client;
+use lsp_types::*;
+use serde_json::json;
 
 /// Indicates the progress stream is bounded from 0-100%.
 #[doc(hidden)]
@@ -115,11 +112,12 @@ impl<B, C> Progress<B, C> {
     /// # Initialization
     ///
     /// This notification will only be sent if the server is initialized.
+    #[allow(clippy::missing_panics_doc)]
     pub async fn begin(self) -> OngoingProgress<B, C> {
         self.client
             .send_notification::<ProgressNotification>(ProgressParams {
                 token: self.token.clone(),
-                value: ProgressParamsValue::WorkDone(WorkDoneProgress::Begin(self.begin_msg)),
+                value: json!(self.begin_msg),
             })
             .await;
 
@@ -155,7 +153,7 @@ impl<B, C> OngoingProgress<B, C> {
         self.client
             .send_notification::<ProgressNotification>(ProgressParams {
                 token: self.token.clone(),
-                value: ProgressParamsValue::WorkDone(WorkDoneProgress::Report(report)),
+                value: json!(report),
             })
             .await;
     }
@@ -349,9 +347,7 @@ impl<B, C> OngoingProgress<B, C> {
         self.client
             .send_notification::<ProgressNotification>(ProgressParams {
                 token: self.token,
-                value: ProgressParamsValue::WorkDone(WorkDoneProgress::End(
-                    lsp_types::WorkDoneProgressEnd { message },
-                )),
+                value: json!(WorkDoneProgressEnd { message }),
             })
             .await;
     }

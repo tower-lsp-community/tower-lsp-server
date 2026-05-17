@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use tower_lsp_f::jsonrpc::{Error, Result};
-use tower_lsp_f::lsp_types::notification::Notification;
 use tower_lsp_f::lsp_types::*;
 use tower_lsp_f::{Client, LanguageServer, LspService, Server};
 
@@ -24,7 +23,8 @@ enum CustomNotification {}
 impl Notification for CustomNotification {
     type Params = CustomNotificationParams;
 
-    const METHOD: &'static str = "custom/notification";
+    const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
+    const METHOD: LspNotificationMethod = LspNotificationMethod::new("custom/notification");
 }
 
 #[derive(Debug)]
@@ -43,7 +43,6 @@ impl LanguageServer for Backend {
                 }),
                 ..ServerCapabilities::default()
             },
-            ..Default::default()
         })
     }
 
@@ -51,7 +50,7 @@ impl LanguageServer for Backend {
         Ok(())
     }
 
-    async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<LSPAny>> {
+    async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<LspAny>> {
         if params.command == "custom.notification" {
             self.client
                 .send_notification::<CustomNotification>(CustomNotificationParams::new(
@@ -60,7 +59,7 @@ impl LanguageServer for Backend {
                 .await;
             self.client
                 .log_message(
-                    MessageType::INFO,
+                    MessageType::Info,
                     format!("Command executed with params: {params:?}"),
                 )
                 .await;
