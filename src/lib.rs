@@ -133,8 +133,9 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     /// The server can use the `initialized` notification, for example, to dynamically register
     /// capabilities with the client.
     #[rpc(name = "initialized")]
-    async fn initialized(&self, params: InitializedParams) {
+    async fn initialized(&self, params: InitializedParams) -> Option<()> {
         let _ = params;
+        None
     }
 
     /// The [`shutdown`] request asks the server to gracefully shut down, but to not exit.
@@ -1228,9 +1229,10 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     ///
     /// [`workspace/didChangeConfiguration`]: https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration
     #[rpc(name = "workspace/didChangeConfiguration")]
-    async fn did_change_configuration(&self, params: DidChangeConfigurationParams) {
+    async fn did_change_configuration(&self, params: DidChangeConfigurationParams) -> Option<()> {
         let _ = params;
         warn!("got a `workspace/didChangeConfiguration` notification, but it is not implemented");
+        None
     }
 
     /// The [`workspace/didChangeWorkspaceFolders`] notification is sent from the client to the
@@ -1247,9 +1249,10 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     /// This notification is also sent if the server has registered itself to receive this
     /// notification.
     #[rpc(name = "workspace/didChangeWorkspaceFolders")]
-    async fn did_change_workspace_folders(&self, params: DidChangeWorkspaceFoldersParams) {
+    async fn did_change_workspace_folders(&self, params: DidChangeWorkspaceFoldersParams) -> Option<()> {
         let _ = params;
         warn!("got a `workspace/didChangeWorkspaceFolders` notification, but it is not implemented");
+        None
     }
 
     /// The [`workspace/willCreateFiles`] request is sent from the client to the server before
@@ -1277,9 +1280,10 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     ///
     /// [`workspace/didCreateFiles`]: https://microsoft.github.io/language-server-protocol/specification#workspace_didCreateFiles
     #[rpc(name = "workspace/didCreateFiles")]
-    async fn did_create_files(&self, params: CreateFilesParams) {
+    async fn did_create_files(&self, params: CreateFilesParams) -> Option<()> {
         let _ = params;
         warn!("got a `workspace/didCreateFiles` notification, but it is not implemented");
+        None
     }
 
     /// The [`workspace/willRenameFiles`] request is sent from the client to the server before
@@ -1307,9 +1311,10 @@ pub trait LanguageServer: (Send + Sync + 'static) {
     ///
     /// [`workspace/didRenameFiles`]: https://microsoft.github.io/language-server-protocol/specification#workspace_didRenameFiles
     #[rpc(name = "workspace/didRenameFiles")]
-    async fn did_rename_files(&self, params: RenameFilesParams) {
+    async fn did_rename_files(&self, params: RenameFilesParams) -> Option<()> {
         let _ = params;
         warn!("got a `workspace/didRenameFiles` notification, but it is not implemented");
+        None
     }
 
     /// The [`workspace/willDeleteFiles`] request is sent from the client to the server before

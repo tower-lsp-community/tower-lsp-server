@@ -249,6 +249,18 @@ impl IntoResponse for () {
     }
 }
 
+/// Support JSON-RPC notification methods.
+impl IntoResponse for Option<()>{
+    fn into_response(self, id: Option<Id>) -> Option<Response> {
+        id.map(|id| Response::from_error(id, Error::invalid_request()))
+    }
+
+    #[inline]
+    fn is_notification() -> bool {
+        true
+    }
+}
+
 /// Support JSON-RPC request methods.
 impl<R: Serialize + Send + 'static> IntoResponse for Result<R, Error> {
     fn into_response(self, id: Option<Id>) -> Option<Response> {
@@ -304,7 +316,9 @@ mod tests {
             Ok(params)
         }
 
-        async fn notification(&self) {}
+        async fn notification(&self) -> Option<()> {
+            None
+        }
 
         async fn notification_params(&self, _params: Params) {}
     }
