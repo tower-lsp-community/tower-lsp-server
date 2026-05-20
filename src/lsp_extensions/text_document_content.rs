@@ -22,7 +22,7 @@ impl TextDocumentContentChangeEventEx for TextDocumentContentChangeEvent {
     fn partial_content(&self) -> Option<&TextDocumentContentChangePartial> {
         match self {
             Self::TextDocumentContentChangeWholeDocument(_) => None,
-            Self::TextDocumentContentChangePartial(partial_content) => Some(&partial_content),
+            Self::TextDocumentContentChangePartial(partial_content) => Some(partial_content),
         }
     }
 }
