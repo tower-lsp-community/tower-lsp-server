@@ -7,3 +7,6 @@ pub use complete_item::*;
 pub mod notifications;
 
 pub use notifications::*;
+
+pub mod text_document_content;
+pub use text_document_content::*;
