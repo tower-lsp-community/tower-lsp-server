@@ -15,7 +15,7 @@ exclude = ["FEATURES.md"]
 
 [package]
 name = "tower-lsp-f"
-version = "0.25.0-beta2"
+version = "0.25.0-beta3"
 authors.workspace = true
 edition.workspace = true
 description = "Language Server Protocol implementation based on Tower"

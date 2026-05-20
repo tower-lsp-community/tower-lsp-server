@@ -881,7 +881,7 @@ checksum = "121c2a6cda46980bb0fcd1647ffaf6cd3fc79a013de288782836f6df9c48780e"
 
 [[package]]
 name = "tower-lsp-f"
-version = "0.25.0-beta2"
+version = "0.25.0-beta3"
 dependencies = [
  "async-codec-lite",
  "async-tungstenite 0.34.1",
