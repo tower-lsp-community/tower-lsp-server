@@ -4,7 +4,7 @@ use std::fmt::{self, Debug, Formatter};
 use std::future::Future;
 
 use dashmap::{DashMap, mapref::entry::Entry};
-use futures::channel::oneshot;
+use futures_channel::oneshot;
 use tracing::warn;
 
 use crate::jsonrpc::{Id, Response};
