@@ -4,9 +4,9 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use futures::channel::mpsc::Receiver;
-use futures::sink::Sink;
-use futures::stream::{FusedStream, Stream, StreamExt};
+use futures_channel::mpsc::Receiver;
+use futures_util::sink::Sink;
+use futures_util::stream::{FusedStream, Stream, StreamExt};
 
 use super::{ExitedError, Pending, ServerState, State};
 use crate::jsonrpc::{Request, Response};
@@ -24,8 +24,8 @@ impl ClientSocket {
     ///
     /// The two halves returned implement the [`Stream`] and [`Sink`] traits, respectively.
     ///
-    /// [`Stream`]: futures::Stream
-    /// [`Sink`]: futures::Sink
+    /// [`Stream`]: futures_util::Stream
+    /// [`Sink`]: futures_util::Sink
     pub fn split(self) -> (RequestStream, ResponseSink) {
         let Self { rx, pending, state } = self;
         let state_ = state.clone();

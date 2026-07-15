@@ -3,15 +3,15 @@
 #[cfg(feature = "runtime-agnostic")]
 use async_codec_lite::{FramedRead, FramedWrite};
 #[cfg(feature = "runtime-agnostic")]
-use futures::io::{AsyncRead, AsyncWrite};
+use futures_util::io::{AsyncRead, AsyncWrite};
 
 #[cfg(feature = "runtime-tokio")]
 use tokio::io::{AsyncRead, AsyncWrite};
 #[cfg(feature = "runtime-tokio")]
 use tokio_util::codec::{FramedRead, FramedWrite};
 
-use futures::channel::mpsc;
-use futures::{
+use futures_channel::mpsc;
+use futures_util::{
     FutureExt, Sink, SinkExt, Stream, StreamExt, TryFutureExt, future, join, stream, stream_select,
 };
 use tower::Service;
@@ -206,12 +206,12 @@ mod tests {
     use std::task::{Context, Poll};
 
     #[cfg(feature = "runtime-agnostic")]
-    use futures::io::Cursor;
+    use futures_util::io::Cursor;
     #[cfg(feature = "runtime-tokio")]
     use std::io::Cursor;
 
-    use futures::future::Ready;
-    use futures::{future, sink, stream};
+    use futures_util::future::Ready;
+    use futures_util::{future, sink, stream};
 
     use super::*;
 

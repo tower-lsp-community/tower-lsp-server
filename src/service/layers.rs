@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use futures::future::{self, BoxFuture, FutureExt};
+use futures_util::future::{self, BoxFuture, FutureExt};
 use tower::{Layer, Service};
 use tracing::{info, warn};
 

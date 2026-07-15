@@ -24,7 +24,8 @@ proposed = ["ls-types/proposed"]
 async-codec-lite = { version = "0.0", optional = true }
 bytes = "1"
 dashmap = "6"
-futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
+futures-util = { version = "0.3", default-features = false, features = [ "std", "async-await", "io", "async-await-macro", "sink" ] }
+futures-channel = { version = "0.3", features = ["sink"] }
 httparse = "1"
 ls-types = "0.0"
 memchr = "2"

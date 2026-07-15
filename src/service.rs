@@ -9,7 +9,7 @@ use std::fmt::{self, Debug, Display, Formatter};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use futures::future::{self, BoxFuture, FutureExt};
+use futures_util::future::{self, BoxFuture, FutureExt};
 use ls_types::LSPAny;
 use tower::Service;
 
@@ -356,7 +356,7 @@ mod tests {
 
         let pending_fut = service.ready().await.unwrap().call(pending_request);
         let cancel_fut = service.ready().await.unwrap().call(cancel_request);
-        let (pending_response, cancel_response) = futures::join!(pending_fut, cancel_fut);
+        let (pending_response, cancel_response) = futures_util::join!(pending_fut, cancel_fut);
 
         let canceled = Response::from_error(1.into(), Error::request_cancelled());
         assert_eq!(pending_response, Ok(Some(canceled)));

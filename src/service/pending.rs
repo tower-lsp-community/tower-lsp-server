@@ -5,7 +5,7 @@ use std::future::Future;
 use std::sync::Arc;
 
 use dashmap::{DashMap, mapref::entry::Entry};
-use futures::future::{self, Either};
+use futures_util::future::{self, Either};
 use tracing::{debug, info};
 
 use super::ExitedError;

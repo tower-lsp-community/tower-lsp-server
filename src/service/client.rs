@@ -11,11 +11,8 @@ use std::{
     task::{Context, Poll},
 };
 
-use futures::{
-    channel::mpsc::{self, Sender},
-    future::BoxFuture,
-    sink::SinkExt,
-};
+use futures_channel::mpsc::{self, Sender};
+use futures_util::{future::BoxFuture, sink::SinkExt};
 use ls_types::{notification, request, *};
 use serde::Serialize;
 use tower::Service;
@@ -709,7 +706,7 @@ impl Service<Request> for Client {
 mod tests {
     use std::future::Future;
 
-    use futures::stream::StreamExt;
+    use futures_util::stream::StreamExt;
     use ls_types::notification::{LogMessage, PublishDiagnostics, ShowMessage, TelemetryEvent};
     use serde_json::json;
 
