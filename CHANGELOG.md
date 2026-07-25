@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 [Unreleased]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.22.1...HEAD
 
+### Added
+
+- Add support for `textDocument/inlineCompletion` from LSP 3.18.0.
+
 ## [0.23.0] - 2025-12-07
 
 ### Added

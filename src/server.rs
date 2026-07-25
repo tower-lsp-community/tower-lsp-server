@@ -906,6 +906,29 @@ rpc! {
             Err(Error::method_not_found())
         }
 
+        /// The [`textDocument/inlineCompletion`] request is sent from the client to the server to
+        /// compute inline completions for a given text document, either explicitly by a user gesture
+        /// or implicitly when typing.
+        ///
+        /// Inline completion items usually complete larger portions of text (for example whole
+        /// methods) and, in contrast to completions, may complete code that is syntactically or
+        /// semantically incorrect.
+        ///
+        /// [`textDocument/inlineCompletion`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_inlineCompletion
+        ///
+        /// # Compatibility
+        ///
+        /// This request was introduced in specification version 3.18.0.
+        #[rpc(name = "textDocument/inlineCompletion")]
+        async fn inline_completion(
+            &self,
+            params: InlineCompletionParams,
+        ) -> Result<Option<InlineCompletionResponse>> {
+            let _ = params;
+            error!("got a `textDocument/inlineCompletion` request, but it is not implemented");
+            Err(Error::method_not_found())
+        }
+
         /// The [`textDocument/diagnostic`] request is sent from the client to the server to ask the
         /// server to compute the diagnostics for a given document.
         ///
