@@ -32,7 +32,25 @@ Symbol          | Description
 
 </details>
 
-### Overall status: (84.5/90) _~93%_
+### Overall status: (85.5/95) _~90%_
+
+## [3.18.0] - 2026-06-04
+
+### Status: (1/5)
+
+Method Name                                | Message Type                | Supported      | Tracking Issue(s)
+-------------------------------------------|:---------------------------:|:--------------:|------------------
+[`textDocument/inlineCompletion`]          | :leftwards_arrow_with_hook: | :green_circle: |
+[`workspace/textDocumentContent`]          | :leftwards_arrow_with_hook: | :red_circle:   |
+[`workspace/textDocumentContent/refresh`]  | :arrow_right_hook:          | :red_circle:   |
+[`workspace/foldingRange/refresh`]         | :arrow_right_hook:          | :red_circle:   |
+[`textDocument/rangesFormatting`]          | :leftwards_arrow_with_hook: | :red_circle:   |
+
+[`textDocument/inlineCompletion`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_inlineCompletion
+[`workspace/textDocumentContent`]: https://microsoft.github.io/language-server-protocol/specification#workspace_textDocumentContent
+[`workspace/textDocumentContent/refresh`]: https://microsoft.github.io/language-server-protocol/specification#workspace_textDocumentContentRefresh
+[`workspace/foldingRange/refresh`]: https://microsoft.github.io/language-server-protocol/specification#workspace_foldingRange_refresh
+[`textDocument/rangesFormatting`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_rangeFormatting
 
 ## [3.17.0] - 2022-05-10
 
@@ -312,6 +330,7 @@ Method Name                          | Message Type                | Supported  
 [o#145]: https://github.com/ebkalderon/tower-lsp/issues/145
 [o#231]: https://github.com/ebkalderon/tower-lsp/issues/231
 
+[3.18.0]: https://microsoft.github.io/language-server-protocol/specification#version_3_18_0
 [3.17.0]: https://microsoft.github.io/language-server-protocol/specification#version_3_17_0
 [3.16.0]: https://microsoft.github.io/language-server-protocol/specification#version_3_16_0
 [3.15.0]: https://microsoft.github.io/language-server-protocol/specification#version_3_15_0
