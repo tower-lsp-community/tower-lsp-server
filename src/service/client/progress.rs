@@ -4,9 +4,10 @@ use std::fmt::{self, Debug, Formatter};
 use std::marker::PhantomData;
 
 use ls_types::{
-    ProgressParams, ProgressParamsValue, ProgressToken, WorkDoneProgress, WorkDoneProgressBegin,
-    WorkDoneProgressEnd, WorkDoneProgressReport, notification::Progress as ProgressNotification,
+    ProgressNotification, ProgressParams, ProgressToken, WorkDoneProgressBegin,
+    WorkDoneProgressEnd, WorkDoneProgressReport,
 };
+use serde_json::json;
 
 use super::Client;
 
@@ -115,11 +116,12 @@ impl<B, C> Progress<B, C> {
     /// # Initialization
     ///
     /// This notification will only be sent if the server is initialized.
+    #[allow(clippy::missing_panics_doc)]
     pub async fn begin(self) -> OngoingProgress<B, C> {
         self.client
             .send_notification::<ProgressNotification>(ProgressParams {
                 token: self.token.clone(),
-                value: ProgressParamsValue::WorkDone(WorkDoneProgress::Begin(self.begin_msg)),
+                value: json!(self.begin_msg),
             })
             .await;
 
@@ -155,7 +157,7 @@ impl<B: Sync, C: Sync> OngoingProgress<B, C> {
         self.client
             .send_notification::<ProgressNotification>(ProgressParams {
                 token: self.token.clone(),
-                value: ProgressParamsValue::WorkDone(WorkDoneProgress::Report(report)),
+                value: json!(report),
             })
             .await;
     }
@@ -349,9 +351,7 @@ impl<B, C> OngoingProgress<B, C> {
         self.client
             .send_notification::<ProgressNotification>(ProgressParams {
                 token: self.token,
-                value: ProgressParamsValue::WorkDone(WorkDoneProgress::End(WorkDoneProgressEnd {
-                    message,
-                })),
+                value: json!(WorkDoneProgressEnd { message }),
             })
             .await;
     }

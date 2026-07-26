@@ -253,7 +253,7 @@ mod tests {
     use super::*;
 
     use bytes::BytesMut;
-    use ls_types::LSPAny;
+    use ls_types::LspAny;
 
     macro_rules! assert_err {
         ($expression:expr, $($pattern:tt)+) => {
@@ -284,7 +284,7 @@ mod tests {
 
         let mut codec = LanguageServerCodec::default();
         let mut buffer = BytesMut::new();
-        let item: LSPAny = serde_json::from_str(decoded).unwrap();
+        let item: LspAny = serde_json::from_str(decoded).unwrap();
         codec.encode(item, &mut buffer).unwrap();
         assert_eq!(buffer, BytesMut::from(encoded.as_str()));
 
@@ -303,7 +303,7 @@ mod tests {
         let mut codec = LanguageServerCodec::default();
         let mut buffer = BytesMut::from(encoded.as_str());
         let message = codec.decode(&mut buffer).unwrap();
-        let decoded_: LSPAny = serde_json::from_str(decoded).unwrap();
+        let decoded_: LspAny = serde_json::from_str(decoded).unwrap();
         assert_eq!(message, Some(decoded_));
 
         let content_type = "application/vscode-jsonrpc; charset=utf8";
@@ -311,7 +311,7 @@ mod tests {
 
         let mut buffer = BytesMut::from(encoded.as_str());
         let message = codec.decode(&mut buffer).unwrap();
-        let decoded_: LSPAny = serde_json::from_str(decoded).unwrap();
+        let decoded_: LspAny = serde_json::from_str(decoded).unwrap();
         assert_eq!(message, Some(decoded_));
 
         let content_type = "application/vscode-jsonrpc; charset=invalid";
@@ -337,7 +337,7 @@ mod tests {
 
         let mut buffer = BytesMut::from(encoded.as_str());
         let message = codec.decode(&mut buffer).unwrap();
-        let decoded_: LSPAny = serde_json::from_str(decoded).unwrap();
+        let decoded_: LspAny = serde_json::from_str(decoded).unwrap();
         assert_eq!(message, Some(decoded_));
     }
 
@@ -348,7 +348,7 @@ mod tests {
 
         let mut codec = LanguageServerCodec::default();
         let mut buffer = BytesMut::from(encoded.as_str());
-        let message: Option<LSPAny> = codec.decode(&mut buffer).unwrap();
+        let message: Option<LspAny> = codec.decode(&mut buffer).unwrap();
         assert_eq!(message, None);
     }
 
@@ -365,7 +365,7 @@ mod tests {
             Err(ParseError::MissingContentLength)
         );
 
-        let message: Option<LSPAny> = codec.decode(&mut buffer).unwrap();
+        let message: Option<LspAny> = codec.decode(&mut buffer).unwrap();
         let first_valid = serde_json::from_str(decoded).unwrap();
         assert_eq!(message, Some(first_valid));
         assert_err!(
@@ -405,7 +405,7 @@ mod tests {
         assert_eq!(message, None);
         buffer.unsplit(rest);
 
-        let decoded: LSPAny = serde_json::from_str(decoded).unwrap();
+        let decoded: LspAny = serde_json::from_str(decoded).unwrap();
         let message = codec.decode(&mut buffer).unwrap();
         assert_eq!(message, Some(decoded));
     }

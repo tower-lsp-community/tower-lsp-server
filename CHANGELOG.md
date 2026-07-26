@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 [Unreleased]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.22.1...HEAD
 
+### Changed
+
+- Change the LSP specification types library from `tower-lsp-community/ls-types` to `ribru17/gen-lsp-types`.
+
 ## [0.23.0] - 2025-12-07
 
 ### Added
