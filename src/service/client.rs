@@ -788,7 +788,7 @@ mod tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn publish_diagnostics() {
-        let uri: Uri = "file:///path/to/file".parse().unwrap();
+        let uri = Uri::from("file:///path/to/file");
         let diagnostics = vec![Diagnostic {
             range: Range::default(),
             message: "example".into(),
