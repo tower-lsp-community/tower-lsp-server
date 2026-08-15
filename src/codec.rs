@@ -253,7 +253,7 @@ mod tests {
     use super::*;
 
     use bytes::BytesMut;
-    use ls_types::LspAny;
+    use gen_lsp_types::LspAny;
 
     macro_rules! assert_err {
         ($expression:expr, $($pattern:tt)+) => {

@@ -3,8 +3,8 @@
 use serde::{Deserialize, Serialize};
 use tower_lsp_server::{
     Client, LanguageServer, LspService, Server,
+    gen_lsp_types::*,
     jsonrpc::{Error, Result},
-    ls_types::*,
 };
 
 #[derive(Debug, Deserialize, Serialize)]

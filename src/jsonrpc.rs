@@ -65,11 +65,11 @@ impl From<String> for Id {
     }
 }
 
-impl From<ls_types::Id> for Id {
-    fn from(num_or_str: ls_types::Id) -> Self {
+impl From<gen_lsp_types::Id> for Id {
+    fn from(num_or_str: gen_lsp_types::Id) -> Self {
         match num_or_str {
-            ls_types::Id::Int(num) => Self::Number(i64::from(num)),
-            ls_types::Id::String(s) => Self::String(s),
+            gen_lsp_types::Id::Int(num) => Self::Number(i64::from(num)),
+            gen_lsp_types::Id::String(s) => Self::String(s),
         }
     }
 }

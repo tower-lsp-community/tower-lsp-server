@@ -3,7 +3,7 @@
 use std::fmt::{self, Debug, Formatter};
 use std::marker::PhantomData;
 
-use ls_types::{
+use gen_lsp_types::{
     ProgressNotification, ProgressParams, ProgressToken, WorkDoneProgressBegin,
     WorkDoneProgressEnd, WorkDoneProgressReport,
 };

@@ -13,7 +13,7 @@ use std::{
 
 use futures_channel::mpsc::{self, Sender};
 use futures_util::{future::BoxFuture, sink::SinkExt};
-use ls_types::*;
+use gen_lsp_types::*;
 use serde::Serialize;
 use tower::Service;
 use tracing::{error, trace};
@@ -187,8 +187,10 @@ impl Client {
     ///
     /// This utilizes the [`$/progress`] notification ([read more]).
     ///
+    /// [`$/progress`]: https://microsoft.github.io/language-server-protocol/specification#progress
+    ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#partialResults
-    pub async fn send_partial_result<R: ls_types::RequestWithPartialResults>(
+    pub async fn send_partial_result<R: gen_lsp_types::RequestWithPartialResults>(
         &self,
         token: ProgressToken,
         partial_result: R::PartialResult,
@@ -554,7 +556,7 @@ impl Client {
     /// # Examples
     ///
     /// ```no_run
-    /// # use tower_lsp_server::{ls_types::*, Client};
+    /// # use tower_lsp_server::{gen_lsp_types::*, Client};
     /// #
     /// # struct Mock {
     /// #     client: Client,
@@ -630,7 +632,7 @@ impl Client {
     /// - The client returns an error
     pub async fn send_request<R>(&self, params: R::Params) -> jsonrpc::Result<R::Result>
     where
-        R: ls_types::Request,
+        R: gen_lsp_types::Request,
     {
         if let State::Initialized | State::ShutDown = self.inner.state.get() {
             self.send_request_unchecked::<R>(params).await
@@ -644,7 +646,7 @@ impl Client {
 
     async fn send_request_unchecked<R>(&self, params: R::Params) -> jsonrpc::Result<R::Result>
     where
-        R: ls_types::Request,
+        R: gen_lsp_types::Request,
     {
         let id = self.next_request_id();
         let request = Request::from_request::<R>(id, params);

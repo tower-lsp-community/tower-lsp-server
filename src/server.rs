@@ -1,4 +1,4 @@
-use ls_types::*;
+use gen_lsp_types::*;
 use tracing::{error, warn};
 
 use crate::jsonrpc::{Error, Result};
@@ -32,7 +32,7 @@ macro_rules! rpc {
         pub mod generated {
             use crate::jsonrpc::Router;
             use crate::service::{layers, Client, Pending, ServerState, ExitedError};
-            use ls_types::*;
+            use gen_lsp_types::*;
             use std::sync::Arc;
             use super::LanguageServer;
 
@@ -300,14 +300,10 @@ rpc! {
         ///
         /// This request was introduced in specification version 3.14.0.
         ///
-        /// The [`GotoDeclarationResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link) return value
-        /// was introduced in specification version 3.14.0 and requires client-side support in order to
-        /// be used. It can be returned if the client set the following field to `true` in the
-        /// [`initialize`](Self::initialize) method:
-        ///
-        /// ```text
-        /// InitializeParams::capabilities::text_document::declaration::link_support
-        /// ```
+        /// The [`DefinitionResponse::DefinitionLinkList`] return value
+        /// was introduced in specification version 3.14.0 and requires
+        /// client-side support in order to be used. It can be returned if the
+        /// client set [`DefinitionResponse.link_support`](gen_lsp_types::DefinitionResponse) to `true`.
         #[rpc(name = "textDocument/declaration")]
         async fn goto_declaration(
             &self,
@@ -325,14 +321,10 @@ rpc! {
         ///
         /// # Compatibility
         ///
-        /// The [`GotoDefinitionResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link) return value
-        /// was introduced in specification version 3.14.0 and requires client-side support in order to
-        /// be used. It can be returned if the client set the following field to `true` in the
-        /// [`initialize`](Self::initialize) method:
-        ///
-        /// ```text
-        /// InitializeParams::capabilities::text_document::definition::link_support
-        /// ```
+        /// The [`DefinitionResponse::DefinitionLinkList`] return value
+        /// was introduced in specification version 3.14.0 and requires
+        /// client-side support in order to be used. It can be returned if the
+        /// client set [`DefinitionResponse.link_support`](gen_lsp_types::DefinitionResponse) to `true`.
         #[rpc(name = "textDocument/definition")]
         async fn goto_definition(
             &self,
@@ -352,14 +344,10 @@ rpc! {
         ///
         /// This request was introduced in specification version 3.6.0.
         ///
-        /// The [`GotoTypeDefinitionResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link) return
-        /// value was introduced in specification version 3.14.0 and requires client-side support in
-        /// order to be used. It can be returned if the client set the following field to `true` in the
-        /// [`initialize`](Self::initialize) method:
-        ///
-        /// ```text
-        /// InitializeParams::capabilities::text_document::type_definition::link_support
-        /// ```
+        /// The [`TypeDefinitionResponse::DefinitionLinkList`] return value
+        /// was introduced in specification version 3.14.0 and requires
+        /// client-side support in order to be used. It can be returned if the
+        /// client set [`TypeDefinitionClientCapabilities.link_support`](gen_lsp_types::TypeDefinitionClientCapabilities) to `true`.
         #[rpc(name = "textDocument/typeDefinition")]
         async fn goto_type_definition(
             &self,
@@ -379,14 +367,10 @@ rpc! {
         ///
         /// This request was introduced in specification version 3.6.0.
         ///
-        /// The [`GotoImplementationResponse::Link`](ls_types::lsp::GotoDefinitionResponse::Link)
-        /// return value was introduced in specification version 3.14.0 and requires client-side
-        /// support in order to be used. It can be returned if the client set the following field to
-        /// `true` in the [`initialize`](Self::initialize) method:
-        ///
-        /// ```text
-        /// InitializeParams::capabilities::text_document::implementation::link_support
-        /// ```
+        /// The [`ImplementationResponse::DefinitionLinkList`] return value
+        /// was introduced in specification version 3.14.0 and requires
+        /// client-side support in order to be used. It can be returned if the
+        /// client set [`ImplementationClientCapabilities.link_support`](gen_lsp_types::ImplementationClientCapabilities) to `true`.
         #[rpc(name = "textDocument/implementation")]
         async fn goto_implementation(
             &self,
@@ -509,6 +493,8 @@ rpc! {
         /// The [`typeHierarchy/supertypes`] request is sent from the client to the server to resolve
         /// the **supertypes** for a given type hierarchy item.
         ///
+        /// [`typeHierarchy/supertypes`]: https://microsoft.github.io/language-server-protocol/specification#typeHierarchy_supertypes
+        ///
         /// Returns `Ok(None)` if the server couldn’t infer a valid type from item in `params`.
         ///
         /// The request doesn’t define its own client and server capabilities. It is only issued if a
@@ -529,6 +515,8 @@ rpc! {
 
         /// The [`typeHierarchy/subtypes`] request is sent from the client to the server to resolve
         /// the **subtypes** for a given type hierarchy item.
+        ///
+        /// [`typeHierarchy/subtypes`]: https://microsoft.github.io/language-server-protocol/specification#typeHierarchy_subtypes
         ///
         /// Returns `Ok(None)` if the server couldn’t infer a valid type from item in `params`.
         ///
@@ -686,10 +674,10 @@ rpc! {
         ///
         /// The returned result is either:
         ///
-        /// * [`DocumentSymbolResponse::Flat`] which is a flat list of all symbols found in a given
+        /// * [`DocumentSymbolResponse::SymbolInformationList`] which is a flat list of all symbols found in a given
         ///   text document. Then neither the symbol’s location range nor the symbol’s container name
         ///   should be used to infer a hierarchy.
-        /// * [`DocumentSymbolResponse::Nested`] which is a hierarchy of symbols found in a given text
+        /// * [`DocumentSymbolResponse::DocumentSymbolList`] which is a hierarchy of symbols found in a given text
         ///   document.
         #[rpc(name = "textDocument/documentSymbol")]
         async fn document_symbol(

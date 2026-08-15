@@ -54,7 +54,7 @@ You can check LSP specification coverage in [`FEATURE.md`](https://github.com/to
 
 ```rust
 use tower_lsp_server::jsonrpc::Result;
-use tower_lsp_server::ls_types::*;
+use tower_lsp_server::gen_lsp_types::*;
 use tower_lsp_server::{Client, LanguageServer, LspService, Server};
 
 #[derive(Debug)]

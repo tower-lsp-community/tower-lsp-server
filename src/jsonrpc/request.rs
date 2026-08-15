@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-use ls_types::LspAny;
+use gen_lsp_types::LspAny;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use super::{Id, Version};
@@ -49,11 +49,11 @@ impl Request {
     /// # Panics
     ///
     /// Panics if `params` could not be serialized into a [`serde_json::Value`]. Since the
-    /// [`ls_types::request::Request`] trait promises this invariant is upheld, this should never
+    /// [`gen_lsp_types::request::Request`] trait promises this invariant is upheld, this should never
     /// happen in practice (unless the trait was implemented incorrectly).
     pub(crate) fn from_request<R>(id: Id, params: R::Params) -> Self
     where
-        R: ls_types::Request,
+        R: gen_lsp_types::Request,
     {
         let params = serde_json::to_value(params).expect("request params cannot be serialized");
 
@@ -70,11 +70,11 @@ impl Request {
     /// # Panics
     ///
     /// Panics if `params` could not be serialized into a [`serde_json::Value`]. Since the
-    /// [`ls_types::notification::Notification`] trait promises this invariant is upheld, this
+    /// [`gen_lsp_types::notification::Notification`] trait promises this invariant is upheld, this
     /// should never happen in practice (unless the trait was implemented incorrectly).
     pub(crate) fn from_notification<N>(params: N::Params) -> Self
     where
-        N: ls_types::Notification,
+        N: gen_lsp_types::Notification,
     {
         let params =
             serde_json::to_value(params).expect("notification params cannot be serialized");
