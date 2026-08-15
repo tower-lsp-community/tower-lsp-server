@@ -19,11 +19,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust-version: [1.87.0, nightly]
+        rust-version: [1.97.1, nightly]
         runtime: [runtime-tokio, runtime-agnostic]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     - uses: dtolnay/rust-toolchain@master
       with:
@@ -37,7 +39,9 @@ jobs:
     name: cargo audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     - run: cargo install --locked cargo-audit
 
@@ -47,7 +51,9 @@ jobs:
     name: cargo clippy
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     - uses: dtolnay/rust-toolchain@stable
       with:
@@ -59,7 +65,9 @@ jobs:
     name: cargo fmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     - uses: dtolnay/rust-toolchain@stable
       with:
