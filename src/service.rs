@@ -75,6 +75,29 @@ impl<S: LanguageServer> LspService<S> {
     where
         F: FnOnce(Client) -> S,
     {
+        Self::build_with_method_set::<_, true>(init)
+    }
+
+    /// Starts building a new `LspService` with only LSP lifecycle and cancellation methods.
+    ///
+    /// The resulting service handles `initialize`, `initialized`, `shutdown`, `exit`, and
+    /// `$/cancelRequest`. Use [`LspServiceBuilder::custom_method`] to register any other methods
+    /// implemented by the server.
+    ///
+    /// Unlike [`LspService::build`], this constructor does not register the default
+    /// [`LanguageServer`] method implementations. This can substantially reduce binary size for
+    /// servers that implement only a small subset of LSP methods.
+    pub fn build_with_lifecycle_methods<F>(init: F) -> LspServiceBuilder<S>
+    where
+        F: FnOnce(Client) -> S,
+    {
+        Self::build_with_method_set::<_, false>(init)
+    }
+
+    fn build_with_method_set<F, const INCLUDE_ALL_METHODS: bool>(init: F) -> LspServiceBuilder<S>
+    where
+        F: FnOnce(Client) -> S,
+    {
         let state = Arc::new(ServerState::new());
 
         let (client, socket) = Client::new(state.clone());
@@ -82,7 +105,7 @@ impl<S: LanguageServer> LspService<S> {
         let pending = Arc::new(Pending::new());
 
         LspServiceBuilder {
-            inner: crate::server::generated::register_lsp_methods(
+            inner: crate::server::generated::register_lsp_methods::<S, INCLUDE_ALL_METHODS>(
                 inner,
                 state.clone(),
                 pending.clone(),
@@ -138,7 +161,8 @@ impl<S: LanguageServer> Service<Request> for LspService<S> {
 
 /// A builder to customize the properties of an `LspService`.
 ///
-/// To construct an `LspServiceBuilder`, refer to [`LspService::build`].
+/// To construct an `LspServiceBuilder`, refer to [`LspService::build`] or
+/// [`LspService::build_with_lifecycle_methods`].
 pub struct LspServiceBuilder<S> {
     inner: Router<S, ExitedError>,
     state: Arc<ServerState>,
@@ -291,7 +315,7 @@ mod tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn initializes_only_once() {
-        let (mut service, _) = LspService::new(|_| Mock);
+        let (mut service, _) = LspService::build_with_lifecycle_methods(|_| Mock).finish();
 
         let request = initialize_request(1);
 
@@ -305,8 +329,25 @@ mod tests {
     }
 
     #[tokio::test(flavor = "current_thread")]
+    async fn initialized_notification() {
+        let (mut service, _) = LspService::build_with_lifecycle_methods(|_| Mock).finish();
+
+        service
+            .ready()
+            .await
+            .unwrap()
+            .call(initialize_request(1))
+            .await
+            .unwrap();
+
+        let initialized = Request::build("initialized").params(json!({})).finish();
+        let response = service.ready().await.unwrap().call(initialized).await;
+        assert_eq!(response, Ok(None));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
     async fn refuses_requests_after_shutdown() {
-        let (mut service, _) = LspService::new(|_| Mock);
+        let (mut service, _) = LspService::build_with_lifecycle_methods(|_| Mock).finish();
 
         let initialize = initialize_request(1);
         let response = service.ready().await.unwrap().call(initialize).await;
@@ -325,7 +366,7 @@ mod tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn exit_notification() {
-        let (mut service, _) = LspService::new(|_| Mock);
+        let (mut service, _) = LspService::build_with_lifecycle_methods(|_| Mock).finish();
 
         let exit = Request::build("exit").finish();
         let response = service.ready().await.unwrap().call(exit.clone()).await;
@@ -337,8 +378,34 @@ mod tests {
     }
 
     #[tokio::test(flavor = "current_thread")]
+    async fn lifecycle_builder_omits_other_methods() {
+        let (mut service, _) = LspService::build_with_lifecycle_methods(|_| Mock).finish();
+
+        let initialize = initialize_request(1);
+        service
+            .ready()
+            .await
+            .unwrap()
+            .call(initialize)
+            .await
+            .unwrap();
+
+        let request = Request::build("codeAction/resolve")
+            .params(json!({"title":""}))
+            .id(2)
+            .finish();
+        let response = service.ready().await.unwrap().call(request).await;
+        let mut error = Error::method_not_found();
+        error.data = Some(LspAny::from("codeAction/resolve"));
+        let error = Response::from_error(2.into(), error);
+        assert_eq!(response, Ok(Some(error)));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
     async fn cancels_pending_requests() {
-        let (mut service, _) = LspService::new(|_| Mock);
+        let (mut service, _) = LspService::build_with_lifecycle_methods(|_| Mock)
+            .custom_method("codeAction/resolve", Mock::code_action_resolve)
+            .finish();
 
         let initialize = initialize_request(1);
         let response = service.ready().await.unwrap().call(initialize).await;
@@ -365,7 +432,7 @@ mod tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn serves_custom_requests() {
-        let (mut service, _) = LspService::build(|_| Mock)
+        let (mut service, _) = LspService::build_with_lifecycle_methods(|_| Mock)
             .custom_method("custom", Mock::custom_request)
             .finish();
 
