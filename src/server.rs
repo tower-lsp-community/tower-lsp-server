@@ -36,7 +36,7 @@ macro_rules! rpc {
             use std::sync::Arc;
             use super::LanguageServer;
 
-            pub fn register_lsp_methods<S>(
+            pub fn register_lsp_methods<S, const INCLUDE_ALL_METHODS: bool>(
                 mut router: Router<S, ExitedError>,
                 state: Arc<ServerState>,
                 pending: Arc<Pending>,
@@ -45,15 +45,21 @@ macro_rules! rpc {
             where
                 S: LanguageServer,
             {
-                $(
-                    rpc!(@register
-                        $rpc_name,
-                        $rpc_method,
-                        router,
-                        state,
-                        pending
-                    );
-                )+
+                if INCLUDE_ALL_METHODS {
+                    $(
+                        rpc!(@register
+                            $rpc_name,
+                            $rpc_method,
+                            router,
+                            state,
+                            pending
+                        );
+                    )+
+                } else {
+                    rpc!(@register "initialize", initialize, router, state, pending);
+                    rpc!(@register "initialized", initialized, router, state, pending);
+                    rpc!(@register "shutdown", shutdown, router, state, pending);
+                }
 
                 router.method(
                     "exit",
