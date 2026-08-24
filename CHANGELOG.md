@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Add support for `textDocument/inlineCompletion` from LSP 3.18.0.
 - Add support for `textDocument/rangesFormatting` from LSP 3.18.0.
+- Add support for `workspace/textDocumentContent` from LSP 3.18.0.
+- Add support for `workspace/textDocumentContent/refresh` from LSP 3.18.0.
 
 ### Changed
 

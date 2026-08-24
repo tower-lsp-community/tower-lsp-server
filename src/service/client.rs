@@ -404,6 +404,38 @@ impl Client {
         self.send_request::<DiagnosticRefreshRequest>(()).await
     }
 
+    /// Asks the client to refresh the content of a specific text document. As a
+    /// result, the client should send a [`workspace/textDocumentContent`]
+    /// request for the given URI.
+    ///
+    /// [`workspace/textDocumentContent`]: https://microsoft.github.io/language-server-protocol/specification#workspace_textDocumentContent
+    ///
+    /// This corresponds to the [`workspace/textDocumentContent/refresh`]
+    /// request.
+    ///
+    /// [`workspace/textDocumentContent/refresh`]: https://microsoft.github.io/language-server-protocol/specification#workspace_textDocumentContentRefresh
+    ///
+    /// # Initialization
+    ///
+    /// If the request is sent to the client before the server has been initialized, this will
+    /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
+    ///
+    /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Compatibility
+    ///
+    /// This request was introduced in specification version 3.18.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
+    pub async fn text_document_content_refresh(&self, uri: Uri) -> jsonrpc::Result<()> {
+        self.send_request::<TextDocumentContentRefreshRequest>(TextDocumentContentRefreshParams {
+            uri,
+        })
+        .await
+    }
+
     /// Submits validation diagnostics for an open file with the given URI.
     ///
     /// This corresponds to the [`textDocument/publishDiagnostics`] notification.

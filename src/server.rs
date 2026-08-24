@@ -1414,6 +1414,30 @@ rpc! {
             Err(Error::method_not_found())
         }
 
+        /// The [`workspace/textDocumentContent`] request is sent from the client
+        /// to the server to fetch the content of a text document. Clients should
+        /// treat the returned content as readonly.
+        ///
+        /// [`workspace/textDocumentContent`]: https://microsoft.github.io/language-server-protocol/specification#workspace_textDocumentContent
+        ///
+        /// Subsequent [`textDocument/didOpen`] text may differ from this result
+        /// because clients normalize whitespace and line endings.
+        ///
+        /// [`textDocument/didOpen`]: Self::did_open
+        ///
+        /// # Compatibility
+        ///
+        /// This request was introduced in specification version 3.18.0.
+        #[rpc(name = "workspace/textDocumentContent")]
+        async fn text_document_content(
+            &self,
+            params: TextDocumentContentParams,
+        ) -> Result<TextDocumentContentResult> {
+            let _ = params;
+            error!("got a `workspace/textDocumentContent` request, but it is not implemented");
+            Err(Error::method_not_found())
+        }
+
         // TODO: Add `work_done_progress_cancel()` here (since 3.15.0) when supported by `tower-lsp-server`
         // https://github.com/ebkalderon/tower-lsp/issues/176
     }
