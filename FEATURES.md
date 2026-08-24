@@ -32,11 +32,11 @@ Symbol          | Description
 
 </details>
 
-### Overall status: (85.5/95) _~90%_
+### Overall status: (86.5/95) _~91%_
 
 ## [3.18.0] - 2026-06-04
 
-### Status: (1/5)
+### Status: (2/5)
 
 Method Name                                | Message Type                | Supported      | Tracking Issue(s)
 -------------------------------------------|:---------------------------:|:--------------:|------------------
@@ -44,13 +44,13 @@ Method Name                                | Message Type                | Suppo
 [`workspace/textDocumentContent`]          | :leftwards_arrow_with_hook: | :red_circle:   |
 [`workspace/textDocumentContent/refresh`]  | :arrow_right_hook:          | :red_circle:   |
 [`workspace/foldingRange/refresh`]         | :arrow_right_hook:          | :red_circle:   |
-[`textDocument/rangesFormatting`]          | :leftwards_arrow_with_hook: | :red_circle:   |
+[`textDocument/rangesFormatting`]          | :leftwards_arrow_with_hook: | :green_circle: |
 
 [`textDocument/inlineCompletion`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_inlineCompletion
 [`workspace/textDocumentContent`]: https://microsoft.github.io/language-server-protocol/specification#workspace_textDocumentContent
 [`workspace/textDocumentContent/refresh`]: https://microsoft.github.io/language-server-protocol/specification#workspace_textDocumentContentRefresh
 [`workspace/foldingRange/refresh`]: https://microsoft.github.io/language-server-protocol/specification#workspace_foldingRange_refresh
-[`textDocument/rangesFormatting`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_rangeFormatting
+[`textDocument/rangesFormatting`]: https://microsoft.github.io/language-server-protocol/specification#documentRangesFormattingParams
 
 ## [3.17.0] - 2022-05-10
 

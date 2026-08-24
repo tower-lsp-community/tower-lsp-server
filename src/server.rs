@@ -1134,6 +1134,24 @@ rpc! {
             Err(Error::method_not_found())
         }
 
+        /// The [`textDocument/rangesFormatting`] request is sent from the client to
+        /// the server to format the given ranges in a document.
+        ///
+        /// [`textDocument/rangesFormatting`]: https://microsoft.github.io/language-server-protocol/specification#documentRangesFormattingParams
+        ///
+        /// # Compatibility
+        ///
+        /// This request was introduced in specification version 3.18.0.
+        #[rpc(name = "textDocument/rangesFormatting")]
+        async fn ranges_formatting(
+            &self,
+            params: DocumentRangesFormattingParams,
+        ) -> Result<Option<Vec<TextEdit>>> {
+            let _ = params;
+            error!("got a `textDocument/rangesFormatting` request, but it is not implemented");
+            Err(Error::method_not_found())
+        }
+
         /// The [`textDocument/onTypeFormatting`] request is sent from the client to the server to
         /// format parts of the document during typing.
         ///
