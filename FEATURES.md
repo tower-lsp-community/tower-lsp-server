@@ -32,18 +32,18 @@ Symbol          | Description
 
 </details>
 
-### Overall status: (88.5/95) _~93%_
+### Overall status: (89.5/95) _~94%_
 
 ## [3.18.0] - 2026-06-04
 
-### Status: (4/5)
+### Status: (5/5)
 
 Method Name                                | Message Type                | Supported      | Tracking Issue(s)
 -------------------------------------------|:---------------------------:|:--------------:|------------------
 [`textDocument/inlineCompletion`]          | :leftwards_arrow_with_hook: | :green_circle: |
 [`workspace/textDocumentContent`]          | :leftwards_arrow_with_hook: | :green_circle: |
 [`workspace/textDocumentContent/refresh`]  | :arrow_right_hook:          | :green_circle: |
-[`workspace/foldingRange/refresh`]         | :arrow_right_hook:          | :red_circle:   |
+[`workspace/foldingRange/refresh`]         | :arrow_right_hook:          | :green_circle: |
 [`textDocument/rangesFormatting`]          | :leftwards_arrow_with_hook: | :green_circle: |
 
 [`textDocument/inlineCompletion`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_inlineCompletion
