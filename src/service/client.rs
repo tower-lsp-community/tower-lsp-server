@@ -436,6 +436,38 @@ impl Client {
         .await
     }
 
+    /// Asks the client to refresh the folding ranges currently shown in editors.
+    /// As a result, the client should ask the server to recompute the folding
+    /// ranges for these editors.
+    ///
+    /// This is useful if a server detects a configuration change which requires
+    /// a re-calculation of all folding ranges. The refresh is global and will
+    /// force the client to refresh all folding ranges currently shown. Note
+    /// that the client still has the freedom to delay the re-calculation if for
+    /// example an editor is currently not visible.
+    ///
+    /// This corresponds to the [`workspace/foldingRange/refresh`] request.
+    ///
+    /// [`workspace/foldingRange/refresh`]: https://microsoft.github.io/language-server-protocol/specification#workspace_foldingRange_refresh
+    ///
+    /// # Initialization
+    ///
+    /// If the request is sent to the client before the server has been initialized, this will
+    /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
+    ///
+    /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
+    ///
+    /// # Compatibility
+    ///
+    /// This request was introduced in specification version 3.18.0.
+    ///
+    /// # Errors
+    ///
+    /// - The request to the client fails
+    pub async fn folding_range_refresh(&self) -> jsonrpc::Result<()> {
+        self.send_request::<FoldingRangeRefreshRequest>(()).await
+    }
+
     /// Submits validation diagnostics for an open file with the given URI.
     ///
     /// This corresponds to the [`textDocument/publishDiagnostics`] notification.
