@@ -60,3 +60,5 @@ todo = "warn"
 unwrap_used = "warn"
 
 wildcard_imports = "allow"
+# keep the examples simple
+unused_async_trait_impl = "allow"
