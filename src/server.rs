@@ -1038,7 +1038,7 @@ rpc! {
         ///   information. However it allows them to better group code action, for example, into
         ///   corresponding menus (e.g. all refactor code actions into a refactor menu).
         #[rpc(name = "textDocument/codeAction")]
-        async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
+        async fn code_action(&self, params: CodeActionParams) -> Result<Option<Vec<CodeActionResponse>>> {
             let _ = params;
             error!("got a `textDocument/codeAction` request, but it is not implemented");
             Err(Error::method_not_found())
