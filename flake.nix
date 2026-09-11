@@ -31,9 +31,7 @@
             packages = with pkgs; [
               pkg-config
               rust-toolchain
-              act
 
-              cargo-semver-checks
               cargo-audit
               cargo-expand
             ];
