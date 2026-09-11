@@ -5,30 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-<!-- Don't forget to update the links at the end -->
-
 ## [Unreleased]
 
-[Unreleased]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.22.1...HEAD
+[Unreleased]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.24.0-rc.1...HEAD
+
+## [0.24.0-rc.1] - 2026-09-11
+
+[0.24.0-rc.1]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.23.0...v0.24.0-rc.1
 
 ### Added
 
-- Add support for `textDocument/inlineCompletion` from LSP 3.18.0.
-- Add support for `textDocument/rangesFormatting` from LSP 3.18.0.
-- Add support for `workspace/textDocumentContent` from LSP 3.18.0.
-- Add support for `workspace/textDocumentContent/refresh` from LSP 3.18.0.
-- Add support for `workspace/foldingRange/refresh` from LSP 3.18.0.
+- Add methods to new LSP v3.18.0 features (#79, #83)
+  - Add support for `textDocument/inlineCompletion`.
+  - Add support for `textDocument/rangesFormatting`.
+  - Add support for `workspace/textDocumentContent`.
+  - Add support for `workspace/textDocumentContent/refresh`.
+  - Add support for `workspace/foldingRange/refresh`.
+
+- Add feature flag to control the url crate used in `gen-lsp-types`.
+
+- Add lifecycle-only LSP builder to unlock binary size reduction (#81)
 
 ### Changed
 
-- Change the LSP specification types library from `tower-lsp-community/ls-types` to `ribru17/gen-lsp-types`.
+- :tada: (Breaking) Change the LSP specification types library from `tower-lsp-community/ls-types` to `ribru17/gen-lsp-types`.
+- Switch from `futures` to `futures_util` and `futures_channel` (#78)
+
+### Fixed
+
+- Fix `textDocument/codeAction` method return type (#84)
 
 ## [0.23.0] - 2025-12-07
 
+[0.23.0]: https://github.com/tower-lsp-community/tower-lsp-server/compare/v0.22.1...v0.23.0
+
 ### Added
 
-- add Amber LSP to README Projects section (#66)
-- support `window/workDoneProgress/create` requests
+- Add Amber LSP to README Projects section (#66)
+- Support `window/workDoneProgress/create` requests
 
 ### Changed
 
