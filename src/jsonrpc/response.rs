@@ -1,20 +1,31 @@
 use std::fmt::{self, Debug, Formatter};
 use std::str::FromStr;
+use std::sync::OnceLock;
 
 use gen_lsp_types::LspAny;
 use serde::{Deserialize, Serialize};
+use serde_json::value::RawValue;
 
 use super::{Error, Id, Result, Version};
 
-#[derive(Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 enum Kind {
-    Ok { result: LspAny },
-    Err { error: Error },
+    Ok {
+        result: LspAny,
+    },
+    OkRaw {
+        result: Box<RawValue>,
+        #[serde(skip)]
+        parsed: OnceLock<LspAny>,
+    },
+    Err {
+        error: Error,
+    },
 }
 
 /// A successful or failed JSON-RPC response.
-#[derive(Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Response {
     jsonrpc: Version,
     #[serde(flatten)]
@@ -43,6 +54,17 @@ impl Response {
         }
     }
 
+    pub(crate) const fn from_raw_ok(id: Id, result: Box<RawValue>) -> Self {
+        Self {
+            jsonrpc: Version,
+            kind: Kind::OkRaw {
+                result,
+                parsed: OnceLock::new(),
+            },
+            id,
+        }
+    }
+
     /// Creates a new response from a request ID and either an `Ok(Value)` or `Err(Error)` body.
     #[must_use]
     pub fn from_parts(id: Id, body: Result<LspAny>) -> Self {
@@ -57,6 +79,7 @@ impl Response {
     pub fn into_parts(self) -> (Id, Result<LspAny>) {
         match self.kind {
             Kind::Ok { result } => (self.id, Ok(result)),
+            Kind::OkRaw { result, .. } => (self.id, Ok(parse(&result))),
             Kind::Err { error } => (self.id, Err(error)),
         }
     }
@@ -64,7 +87,7 @@ impl Response {
     /// Returns `true` if the response indicates success.
     #[must_use]
     pub const fn is_ok(&self) -> bool {
-        matches!(self.kind, Kind::Ok { .. })
+        matches!(self.kind, Kind::Ok { .. } | Kind::OkRaw { .. })
     }
 
     /// Returns `true` if the response indicates failure.
@@ -77,9 +100,10 @@ impl Response {
     ///
     /// This member only exists if the response indicates success.
     #[must_use]
-    pub const fn result(&self) -> Option<&LspAny> {
+    pub fn result(&self) -> Option<&LspAny> {
         match &self.kind {
             Kind::Ok { result } => Some(result),
+            Kind::OkRaw { result, parsed } => Some(parsed.get_or_init(|| parse(result))),
             Kind::Err { .. } => None,
         }
     }
@@ -91,7 +115,7 @@ impl Response {
     pub const fn error(&self) -> Option<&Error> {
         match &self.kind {
             Kind::Err { error } => Some(error),
-            Kind::Ok { .. } => None,
+            Kind::Ok { .. } | Kind::OkRaw { .. } => None,
         }
     }
 
@@ -102,6 +126,18 @@ impl Response {
     }
 }
 
+impl PartialEq for Response {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id && self.error() == other.error() && self.result() == other.result()
+    }
+}
+
+fn parse(raw: &RawValue) -> LspAny {
+    let mut de = serde_json::Deserializer::from_str(raw.get());
+    de.disable_recursion_limit();
+    LspAny::deserialize(&mut de).expect("serialized results are valid JSON")
+}
+
 impl Debug for Response {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let mut d = f.debug_struct("Response");
@@ -109,6 +145,7 @@ impl Debug for Response {
 
         match &self.kind {
             Kind::Ok { result } => d.field("result", result),
+            Kind::OkRaw { result, .. } => d.field("result", result),
             Kind::Err { error } => d.field("error", error),
         };
 
